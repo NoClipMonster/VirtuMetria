@@ -22,7 +22,7 @@ public class CameraMovement : MonoBehaviour
     Quaternion originalRotation;
     void OnGUI()
     {
-        GUI.DrawTexture(new Rect((Screen.width / 2) - texture.width, (Screen.height / 2) - texture.height, texture.width, texture.height), texture);
+        GUI.DrawTexture(new Rect((Screen.width / 2) - texture.width/2, (Screen.height / 2) - texture.height/2, texture.width, texture.height), texture);
     }
     void Start()
     {
@@ -40,12 +40,12 @@ public class CameraMovement : MonoBehaviour
     void Update()
     {
 
-        if (mouse.leftButton.isPressed ||gamepad.rightShoulder.isPressed)
+        if (mouse.leftButton.wasPressedThisFrame ||gamepad.rightShoulder.wasPressedThisFrame)
         {
             Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-            // Запись объекта, в который пришел луч, в переменную
+
             RaycastHit hit;
-            Physics.Raycast(ray, out hit, 20,0);
+            Physics.Raycast(ray, out hit, 200);
             
             if (hit.collider != null)
             {
