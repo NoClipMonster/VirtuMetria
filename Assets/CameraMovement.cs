@@ -40,15 +40,17 @@ public class CameraMovement : MonoBehaviour
     void Update()
     {
 
-        if (mouse.leftButton.isPressed ||gamepad.triangleButton.isPressed)
+        if (mouse.leftButton.isPressed ||gamepad.rightShoulder.isPressed)
         {
             Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
             // Запись объекта, в который пришел луч, в переменную
             RaycastHit hit;
-            Physics.Raycast(ray, out hit, 20);
+            Physics.Raycast(ray, out hit, 20,0);
+            
             if (hit.collider != null)
             {
-                if (hit.collider.gameObject.tag == "destroyAble")
+                Debug.Log(hit.collider.gameObject.name);
+                    if (hit.collider.gameObject.tag == "destroyAble")
                     Destroy(hit.collider.gameObject);
             }
         }
@@ -59,8 +61,8 @@ public class CameraMovement : MonoBehaviour
 
         // Движения мыши -> Вращение камеры
 
-            rotationX += (mouse.delta.x.ReadValue() + ToCube(gamepad.rightStick.x.ReadValue()) * 1000) * mouseSensitivity;
-            rotationY += (mouse.delta.y.ReadValue() + ToCube(gamepad.rightStick.y.ReadValue()) * 500) * mouseSensitivity;
+            rotationX += (mouse.delta.x.ReadValue() + ToCube(gamepad.rightStick.x.ReadValue()) * 500) * mouseSensitivity;
+            rotationY += (mouse.delta.y.ReadValue() + ToCube(gamepad.rightStick.y.ReadValue()) * 250) * mouseSensitivity;
 
             rotationX = ClampAngle(rotationX, minimumX, maximumX);
             rotationY = ClampAngle(rotationY, minimumY, maximumY);
@@ -72,9 +74,9 @@ public class CameraMovement : MonoBehaviour
 
             // Ускорение при нажатии клавиши Shift
             
-            if (keyboard.leftShiftKey.wasPressedThisFrame|| gamepad.rightTrigger.isPressed)
+            if (keyboard.leftShiftKey.wasPressedThisFrame|| gamepad.rightTrigger.wasPressedThisFrame)
                 speed *= 10;
-            else if (keyboard.leftShiftKey.wasReleasedThisFrame&&!gamepad.rightTrigger.isPressed)
+            else if (keyboard.leftShiftKey.wasReleasedThisFrame||gamepad.rightTrigger.wasReleasedThisFrame)
                 speed /= 10;
 
             // Поднятие и опускание камеры
