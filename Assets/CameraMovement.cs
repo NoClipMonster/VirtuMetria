@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -14,19 +12,17 @@ public class CameraMovement : MonoBehaviour
     public float maximumY = 60f;
 
     public Texture texture;
-    
+
     Keyboard keyboard;
     Mouse mouse;
-
+    Gamepad gamepad;
     Vector3 transfer;
     float rotationX = 0f;
     float rotationY = 0f;
     Quaternion originalRotation;
-
-
-     void OnGUI()
-    {  
-        GUI.DrawTexture(new Rect(Screen.width / 2-4, Screen.height / 2-4, 7, 7), texture);
+    void OnGUI()
+    {
+        GUI.DrawTexture(new Rect((Screen.width / 2) - texture.width, (Screen.height / 2) - texture.height, texture.width, texture.height), texture);
     }
     void Start()
     {
@@ -34,75 +30,65 @@ public class CameraMovement : MonoBehaviour
         Cursor.visible = false;
         originalRotation = transform.rotation;
         foreach (var item in InputSystem.devices)
-        {
             Debug.Log(item.name);
-            switch (item.name)
-            {
-                case "Keyboard":
-                    item.MakeCurrent();
-                    break;
-                case "Mouse":
-                    item.MakeCurrent();
-                    break;
-            }
-           
-        }
+
         keyboard = Keyboard.current;
         mouse = Mouse.current;
-        
+        gamepad = Gamepad.current;
     }
 
     void Update()
     {
-        
-        if (mouse.leftButton.isPressed)
+
+        if (mouse.leftButton.isPressed ||gamepad.triangleButton.isPressed)
         {
             Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
             // Запись объекта, в который пришел луч, в переменную
             RaycastHit hit;
-            Physics.Raycast(ray, out hit,20);
+            Physics.Raycast(ray, out hit, 20);
             if (hit.collider != null)
             {
                 if (hit.collider.gameObject.tag == "destroyAble")
                     Destroy(hit.collider.gameObject);
             }
-            else Debug.Log("СОСИ");
         }
-        
-        // Движения мыши -> Вращение камеры
-        if (mouse.rightButton.isPressed || Cursor.visible == false)
+        float ToCube(float f)
         {
-            rotationX += mouse.delta.x.ReadValue() * mouseSensitivity;
-            rotationY += mouse.delta.y.ReadValue() * mouseSensitivity;
+            return f * f * f;
+        }
+
+        // Движения мыши -> Вращение камеры
+
+            rotationX += (mouse.delta.x.ReadValue() + ToCube(gamepad.rightStick.x.ReadValue()) * 1000) * mouseSensitivity;
+            rotationY += (mouse.delta.y.ReadValue() + ToCube(gamepad.rightStick.y.ReadValue()) * 500) * mouseSensitivity;
 
             rotationX = ClampAngle(rotationX, minimumX, maximumX);
             rotationY = ClampAngle(rotationY, minimumY, maximumY);
             Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
             Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
             transform.rotation = originalRotation * xQuaternion * yQuaternion;
-        
-            
 
-        // Ускорение при нажатии клавиши Shift
-        
-            if (keyboard.leftShiftKey.wasPressedThisFrame)
+
+
+            // Ускорение при нажатии клавиши Shift
+            
+            if (keyboard.leftShiftKey.wasPressedThisFrame|| gamepad.rightTrigger.isPressed)
                 speed *= 10;
-            else if (keyboard.leftShiftKey.wasReleasedThisFrame)
+            else if (keyboard.leftShiftKey.wasReleasedThisFrame&&!gamepad.rightTrigger.isPressed)
                 speed /= 10;
 
             // Поднятие и опускание камеры
             Vector3 newPos = new Vector3(0, 1, 0);
-            if (keyboard.qKey.isPressed)
+            if (keyboard.qKey.isPressed||gamepad.crossButton.isPressed)
                 transform.position += newPos * speed * Time.deltaTime;
-            else if (keyboard.eKey.isPressed)
+            else if (keyboard.eKey.isPressed||gamepad.circleButton.isPressed)
                 transform.position -= newPos * speed * Time.deltaTime;
 
             // перемещение камеры
-            transfer = transform.forward * ((keyboard.wKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.sKey.isPressed ? 1 : 0 * Time.deltaTime));
-            transfer += transform.right * ((keyboard.dKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.aKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transfer = transform.forward * (((keyboard.wKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.sKey.isPressed ? 1 : 0 * Time.deltaTime)) + gamepad.leftStick.y.ReadValue());
+            transfer += transform.right * (((keyboard.dKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.aKey.isPressed ? 1 : 0 * Time.deltaTime)) + gamepad.leftStick.x.ReadValue());
             transform.position += transfer * speed * Time.deltaTime;
-        }
-          
+        
     }
 
     public static float ClampAngle(float angle, float min, float max)
