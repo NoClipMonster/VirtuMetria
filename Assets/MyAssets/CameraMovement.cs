@@ -15,7 +15,7 @@ public class CameraMovement : MonoBehaviour
 
     Keyboard keyboard;
     Mouse mouse;
-    Gamepad gamepad;
+
     Vector3 transfer;
     float rotationX = 0f;
     float rotationY = 0f;
@@ -30,17 +30,17 @@ public class CameraMovement : MonoBehaviour
         Cursor.visible = false;
         originalRotation = transform.rotation;
         foreach (var item in InputSystem.devices)
-            Debug.Log(item.name);
-
-        keyboard = Keyboard.current;
+        {
+           Debug.Log(item.name); 
+            item.MakeCurrent();
+        }
         mouse = Mouse.current;
-        gamepad = Gamepad.current;
+        keyboard = Keyboard.current;
     }
 
     void Update()
     {
-
-        if (mouse.leftButton.wasPressedThisFrame ||gamepad.rightShoulder.wasPressedThisFrame)
+        if (mouse.leftButton.wasPressedThisFrame)
         {
             Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
 
@@ -54,15 +54,10 @@ public class CameraMovement : MonoBehaviour
                     Destroy(hit.collider.gameObject);
             }
         }
-        float ToCube(float f)
-        {
-            return f * f * f;
-        }
-
         // Движения мыши -> Вращение камеры
 
-            rotationX += (mouse.delta.x.ReadValue() + ToCube(gamepad.rightStick.x.ReadValue()) * 500) * mouseSensitivity;
-            rotationY += (mouse.delta.y.ReadValue() + ToCube(gamepad.rightStick.y.ReadValue()) * 250) * mouseSensitivity;
+            rotationX += mouse.delta.x.ReadValue()  * mouseSensitivity;
+            rotationY += mouse.delta.y.ReadValue() * mouseSensitivity;
 
             rotationX = ClampAngle(rotationX, minimumX, maximumX);
             rotationY = ClampAngle(rotationY, minimumY, maximumY);
@@ -70,27 +65,24 @@ public class CameraMovement : MonoBehaviour
             Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
             transform.rotation = originalRotation * xQuaternion * yQuaternion;
 
-
-
             // Ускорение при нажатии клавиши Shift
             
-            if (keyboard.leftShiftKey.wasPressedThisFrame|| gamepad.rightTrigger.wasPressedThisFrame)
+            if (keyboard.leftShiftKey.wasPressedThisFrame)
                 speed *= 10;
-            else if (keyboard.leftShiftKey.wasReleasedThisFrame||gamepad.rightTrigger.wasReleasedThisFrame)
+            else if (keyboard.leftShiftKey.wasReleasedThisFrame)
                 speed /= 10;
 
             // Поднятие и опускание камеры
             Vector3 newPos = new Vector3(0, 1, 0);
-            if (keyboard.qKey.isPressed||gamepad.crossButton.isPressed)
+            if (keyboard.qKey.isPressed)
                 transform.position += newPos * speed * Time.deltaTime;
-            else if (keyboard.eKey.isPressed||gamepad.circleButton.isPressed)
+            else if (keyboard.eKey.isPressed)
                 transform.position -= newPos * speed * Time.deltaTime;
 
             // перемещение камеры
-            transfer = transform.forward * (((keyboard.wKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.sKey.isPressed ? 1 : 0 * Time.deltaTime)) + gamepad.leftStick.y.ReadValue());
-            transfer += transform.right * (((keyboard.dKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.aKey.isPressed ? 1 : 0 * Time.deltaTime)) + gamepad.leftStick.x.ReadValue());
-            transform.position += transfer * speed * Time.deltaTime;
-        
+            transfer = transform.forward * ((keyboard.wKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.sKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transfer += transform.right * ((keyboard.dKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.aKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transform.position += transfer * speed * Time.deltaTime;  
     }
 
     public static float ClampAngle(float angle, float min, float max)
