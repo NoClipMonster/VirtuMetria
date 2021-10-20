@@ -6,168 +6,138 @@ public class MeshEditor : MonoBehaviour
     Mesh oMesh;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
-    int[] triangles;
-    public GameObject layoutDot;
 
-    List<List<int>> SimilarIndexes = new List<List<int>>();
     public Vector3[] Vertices;
     public Dots dots;
-    public class Dots
+
+    void Start()
     {
-        public List<Dot> dots = new List<Dot>();
-        public GameObject LayoutDot;
-        public class Dot : Dots
+        dots = new Dots();
+
+        oMeshFilter = GetComponent<MeshFilter>();
+        oMeshCollider = GetComponent<MeshCollider>();
+        oMesh = oMeshFilter.sharedMesh;
+
+        dots.AllVectors = oMesh.vertices;
+        Vertices = dots.VarVectors;
+    }
+    
+    void Update()
+    {
+        if (Keyboard.current.spaceKey.isPressed)
         {
-            Vector3 vector3;
-            public Vector3 Vector3
+            foreach (var item in dots.AllVectors)
             {
-                get { return vector3; }
-                set
+                Debug.Log(getVector(item));
+            }
+            string getVector(Vector3 v)
+            {
+                string str = v.x + " " + v.y + " " + v.z;
+
+                return str;
+            }
+            foreach (var item in dots.Alldots)
+            {
+                if (item.Vector3.y > 0 && item.Vector3.x > 0)
                 {
-                    vector3 = value;
+                    dots.Alldots[item.similarDots[0]].Vector3 += Vector3.one / 100;
                 }
             }
-            public List<int> similarDots = new List<int>();
-            public bool showDot = false;
-            public new GameObject LayoutDot;
+            oMeshFilter.mesh.vertices = dots.AllVectors;
+            oMeshFilter.mesh.RecalculateNormals();
+            oMeshFilter.mesh.RecalculateBounds();
+            oMeshFilter.mesh.RecalculateTangents();
+            oMeshCollider.sharedMesh = oMeshFilter.mesh;
+            Vertices = dots.VarVectors;
+        }
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            dots.AllVectors = oMesh.vertices;
+            oMeshFilter.mesh.vertices = oMesh.vertices;
+            oMeshFilter.mesh.RecalculateNormals();
+            oMeshFilter.mesh.RecalculateBounds();
+            oMeshFilter.mesh.RecalculateTangents();
+            oMeshCollider.sharedMesh = oMeshFilter.mesh;
+            Vertices = dots.VarVectors;
         }
 
-        public void ShowDot(int index, MeshFilter mf)
+    }
+
+    public class Dots
+    {
+        public List<Dot> Alldots = new List<Dot>();
+        public int Count { get {return Alldots.Count; } }
+       public class Dot
         {
-            Dot dot = dots[index];
-            dot.showDot = true;
-            dot.LayoutDot = LayoutDot;
-            Instantiate(dot.LayoutDot, mf.gameObject.transform.position + dot.Vector3, new Quaternion(0, 0, 0, 0));
+            public Vector3 Vector3;
+            public List<int> similarDots = new List<int>();
         }
+
         public Dot GetDots(int index)
         {
-            return dots[index];
+            return Alldots[index];
         }
+
         public Dot GetDots(Vector3 vector3)
         {
-            foreach (var item in dots)
+            foreach (var item in Alldots)
             {
                 if (item.Vector3 == vector3)
                     return item;
             }
             return null;
         }
-
-    }
-
-    void FillDot()
-    {
-        for (int i = 0; i < SimilarIndexes.Count; i++)
+        public Vector3[] AllVectors
         {
-            dots.dots.Add(new Dots.Dot { Vector3 = Vertices[SimilarIndexes[i][0]], similarDots = SimilarIndexes[i] });
-        }
-    }
-    void ShowDot()
-    {
-        foreach (var dot in dots.dots)
-        {
-            Debug.Log(getVector(dot.Vector3) + "  :::Точки с данным вектором: " + getDots(dot.similarDots));
-        }
-        string getVector(Vector3 v)
-        {
-            string str = v.x + " " + v.y + " " + v.z;
-
-            return str;
-        }
-        string getDots(List<int> dots)
-        {
-            string str = "";
-            foreach (var item in dots)
+            get
             {
-                str += item + " ";
+                int kol = 0;
+                foreach (var dot in Alldots)
+                    foreach (var i in dot.similarDots)
+                        kol++;
+                Vector3[] vectors = new Vector3[kol];
+                foreach (var dot in Alldots)
+                    foreach (var i in dot.similarDots)
+                        vectors[i] = dot.Vector3;
+                return vectors;
             }
-            return str;
-        }
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-        dots = new Dots();
-        dots.LayoutDot = layoutDot;
-
-        oMeshFilter = GetComponent<MeshFilter>();
-        oMeshCollider = GetComponent<MeshCollider>();
-        oMesh = oMeshFilter.sharedMesh;
-
-        Vertices = oMesh.vertices;
-
-        bool[] visited = new bool[Vertices.Length];
-
-        for (int i = 0; i < Vertices.Length; i++)
-        {
-            if (visited[i])
+            set
             {
-                continue;
-            }
-            dots.dots.Add(new Dots.Dot() { Vector3 = Vertices[i], similarDots = new List<int>() });
-            for (int j = 0; j < Vertices.Length; j++)
-            {
-                if (Vertices[i] == Vertices[j])
+                Alldots.Clear();
+                bool[] visited = new bool[value.Length];
+
+                for (int i = 0; i < value.Length; i++)
                 {
-                    dots.dots[i].similarDots.Add(j);
-                    visited[j] = true;
-                }
-            }
-        }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Keyboard.current.eKey.wasPressedThisFrame)
-        {
-            FillDot();
-            ShowDot();
-            for (int i = 0; i < dots.dots.Count; i++)
-            {
-                dots.ShowDot(i, oMeshFilter);
-            }
-        }
-        if (Keyboard.current.spaceKey.isPressed)
-        {
-            Vector3[] vectors = oMeshFilter.mesh.vertices;
-
-            foreach (var item in dots.dots)
-            {
-                if (item.Vector3.y < 0 && item.Vector3.x < 0)
-                {
-                    item.Vector3 += Vector3.one / 100;
-                    foreach (var item1 in item.similarDots)
+                    if (visited[i])
                     {
-                        oMeshFilter.mesh.vertices[item1] = item.Vector3;
+                        continue;
                     }
-                    
+                    Alldots.Add(new Dots.Dot() { Vector3 = value[i], similarDots = new List<int>() });
+                    for (int j = 0; j < value.Length; j++)
+                    {
+                        if (value[i] == value[j])
+                        {
+                            Alldots[i].similarDots.Add(j);
+                            visited[j] = true;
+                        }
+                    }
                 }
             }
-            
-            oMeshFilter.mesh.RecalculateNormals();
-            oMeshFilter.mesh.RecalculateBounds();
-            oMeshFilter.mesh.RecalculateTangents();
-            oMeshCollider.sharedMesh = oMeshFilter.mesh;
-            UpdateVerts();
+
         }
-        if (Keyboard.current.rKey.wasPressedThisFrame)
+        public Vector3[] VarVectors
         {
-            oMeshFilter.mesh = oMesh;
-            oMeshFilter.mesh.RecalculateNormals();
-            oMeshFilter.mesh.RecalculateBounds();
-            oMeshFilter.mesh.RecalculateTangents();
-            oMeshCollider.sharedMesh = oMeshFilter.mesh;
-            UpdateVerts();
-        }
-        void UpdateVerts()
-        {
-            foreach (var item in SimilarIndexes)
+            get
             {
-                Vertices[item[0]] = oMeshFilter.mesh.vertices[item[0]];
+                List<Vector3> vectors = new List<Vector3>();
+                foreach (var item in Alldots)
+                {
+                    vectors.Add(item.Vector3);
+                }
+                return vectors.ToArray();
             }
+
         }
     }
+ 
 }
