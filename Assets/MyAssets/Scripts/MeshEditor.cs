@@ -11,6 +11,61 @@ public class MeshEditor : MonoBehaviour
 
     List<List<int>> SimilarIndexes = new List<List<int>>();
     public Vector3[] Vertices;
+    public Dots dots = new Dots();
+    public class Dots
+    {
+        public List<Dot> dots = new List<Dot>();
+        public class Dot
+        {
+            public Vector3 vector3;
+            public int[] similarDots;
+        }
+        public Dot GetDots(int index)
+        {
+            return dots[index];
+        }
+        public Dot GetDots(Vector3 vector3)
+        {
+            foreach (var item in dots)
+            {
+                if (item.vector3 == vector3)
+                    return item;
+                
+            }
+            return null;
+        }
+    }
+  
+   
+    void FillDot()
+    {
+        for (int i = 0; i < SimilarIndexes.Count; i++)
+        {
+            dots.dots.Add(new Dots.Dot { vector3 = Vertices[SimilarIndexes[i][0]], similarDots = SimilarIndexes[i].ToArray() });
+        }
+    }
+    void ShowDot()
+    {
+        foreach (var dot in dots.dots)
+        {
+            Debug.Log(getVector(dot.vector3)+ "  :::Точки с данным вектором: "+ getDots(dot.similarDots));
+        }
+        string getVector(Vector3 v)
+        {
+            string str = v.x + " " + v.y+" " + v.z;
+         
+            return str;
+        }
+        string getDots(int[] dots)
+        {
+            string str = "";
+            foreach (var item in dots)
+            {
+                str += item + " ";
+            }
+            return str;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -72,7 +127,11 @@ public class MeshEditor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Keyboard.current.spaceKey.isPressed)
+        if (Keyboard.current.eKey.wasPressedThisFrame)
+        { FillDot();
+            ShowDot();
+        }
+            if (Keyboard.current.spaceKey.isPressed)
         {
             Vector3[] vectors = oMeshFilter.mesh.vertices;
 
