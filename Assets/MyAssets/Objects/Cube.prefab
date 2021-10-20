@@ -47,6 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553c0701b2cf1ff40a162abacb1a5afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  layoutDot: {fileID: 7415997505686628712, guid: 94992ba5c537eb248879148ccf2254f6,
+    type: 3}
   Vertices: []
 --- !u!33 &714836255419991693
 MeshFilter:

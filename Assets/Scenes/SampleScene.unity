@@ -2408,6 +2408,7 @@ GameObject:
   - component: {fileID: 1725982593}
   - component: {fileID: 1725982596}
   - component: {fileID: 1725982595}
+  - component: {fileID: 1725982597}
   m_Layer: 0
   m_Name: XRRig
   m_TagString: Untagged
@@ -2428,9 +2429,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_CameraFloorOffsetObject: {fileID: 1045848415}
-  m_RequestedTrackingMode: 2
+  m_RequestedTrackingMode: 0
   m_TrackingOriginMode: 1
-  m_TrackingSpace: 1
+  m_TrackingSpace: 0
   m_CameraYOffset: 0
 --- !u!4 &1725982594
 Transform:
@@ -2474,6 +2475,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Timeout: 10
   m_XRRig: {fileID: 0}
+--- !u!114 &1725982597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1725982592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67e14181e33ee1a4387d565a486458d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1728657555
 GameObject:
   m_ObjectHideFlags: 0
