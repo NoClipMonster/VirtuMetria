@@ -27,7 +27,6 @@ public class CameraMovement : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
         originalRotation = transform.rotation;
         foreach (var item in InputSystem.devices)
         {
