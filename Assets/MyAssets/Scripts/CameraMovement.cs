@@ -22,6 +22,7 @@ public class CameraMovement : MonoBehaviour
     Quaternion originalRotation;
     void OnGUI()
     {
+        if(texture != null)
         GUI.DrawTexture(new Rect((Screen.width / 2) - texture.width/2, (Screen.height / 2) - texture.height/2, texture.width, texture.height), texture);
     }
     void Start()

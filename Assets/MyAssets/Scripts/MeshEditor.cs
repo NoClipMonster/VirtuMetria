@@ -6,10 +6,19 @@ public class MeshEditor : MonoBehaviour
     Mesh oMesh;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
+    Dots dots;
 
+    
+    public float MaxDrawDistance = 6;
+    public float MinDrawDistance = 3;
     public Vector3[] Vertices;
-    public Dots dots;
+    public int[] Triangels;
+    public GameObject DotLayoutObject;
+    public GameObject TrackingObject;
+    bool Space = false;
+    bool R = false;
 
+    Vector3[] defaultVerts;
     void Start()
     {
         dots = new Dots();
@@ -18,66 +27,130 @@ public class MeshEditor : MonoBehaviour
         oMeshCollider = GetComponent<MeshCollider>();
         oMesh = oMeshFilter.sharedMesh;
 
-        dots.AllVectors = oMesh.vertices;
-        Vertices = dots.VarVectors;
+        dots.AllVertices = oMesh.vertices;
+        Vertices = dots.VarVertices;
+        defaultVerts = Vertices;
+        dots.parent = GetComponent<Transform>();
+        dots.standartLayoutDot = DotLayoutObject;
+        dots.InitializeLODs();
     }
-    
-    void Update()
-    {
-        if (Keyboard.current.spaceKey.isPressed)
-        {
-            foreach (var item in dots.AllVectors)
-            {
-                Debug.Log(getVector(item));
-            }
-            string getVector(Vector3 v)
-            {
-                string str = v.x + " " + v.y + " " + v.z;
 
-                return str;
-            }
-            foreach (var item in dots.Alldots)
+    private void FixedUpdate()
+    {
+        if (Space)
+        {
+            Vector3[] ve = dots.VarVertices;
+            for (int i = 0; i < ve.Length; i++)
+                ve[i] = (ve[i].y > 0 && ve[i].x > 0) ? ve[i] + Vector3.one / 100 : ve[i];
+
+            dots.VarVertices = ve;
+            UpdateMesh();
+        }
+        if (R)
+        {
+            dots.VarVertices = defaultVerts;
+            UpdateMesh();
+        }
+
+        void UpdateMesh()
+        {
+            oMeshFilter.mesh.vertices = dots.AllVertices;
+            oMeshFilter.mesh.RecalculateBounds();
+            oMeshFilter.mesh.RecalculateNormals();
+            oMeshFilter.mesh.RecalculateTangents();
+            oMeshCollider.sharedMesh = oMeshFilter.mesh;
+            Vertices = dots.VarVertices;
+        }
+        for (int i = 0; i < dots.VarVertices.Length; i++)
+        {
+            float dist = Vector3.Distance(dots.GetLayoutDot(i).AbsPosition + transform.position, TrackingObject.transform.position);
+
+            float alp(float min, float max, float val)
             {
-                if (item.Vector3.y > 0 && item.Vector3.x > 0)
+                if (val < min)
+                    return 1;
+                if (val > max)
+                    return 0;
+                else
                 {
-                    dots.Alldots[item.similarDots[0]].Vector3 += Vector3.one / 100;
+                    return 1 - ((val - min) / (max - min));
                 }
             }
-            oMeshFilter.mesh.vertices = dots.AllVectors;
-            oMeshFilter.mesh.RecalculateNormals();
-            oMeshFilter.mesh.RecalculateBounds();
-            oMeshFilter.mesh.RecalculateTangents();
-            oMeshCollider.sharedMesh = oMeshFilter.mesh;
-            Vertices = dots.VarVectors;
-        }
-        if (Keyboard.current.rKey.wasPressedThisFrame)
-        {
-            dots.AllVectors = oMesh.vertices;
-            oMeshFilter.mesh.vertices = oMesh.vertices;
-            oMeshFilter.mesh.RecalculateNormals();
-            oMeshFilter.mesh.RecalculateBounds();
-            oMeshFilter.mesh.RecalculateTangents();
-            oMeshCollider.sharedMesh = oMeshFilter.mesh;
-            Vertices = dots.VarVectors;
-        }
 
+            Color color = dots.GetLayoutDot(i).Color;
+            color.a = alp(MinDrawDistance, MaxDrawDistance, dist); ;
+            dots.EditLayouDot(dots.VarVertices[i], color, i);
+        }
     }
+    void Update()
+    {
+        //Input.GetKey(KeyCode.Space)
+        Space = Keyboard.current.spaceKey.isPressed;
 
+        //Input.GetKeyDown(KeyCode.R)
+        R = Keyboard.current.rKey.wasPressedThisFrame;
+
+
+        /*  if (Input.GetKeyDown(KeyCode.N))
+          // if (Keyboard.current.nKey.wasPressedThisFrame)
+          {
+              Vector3[] ve = dots.VarVertices;
+              dots.VarVertices = ve;
+              UpdateMesh();
+          }*/
+    }
+    public class LayOutDot
+    {
+        GameObject gameObject;
+        Transform parent;
+        public LayOutDot(GameObject LayOutGameObject, Vector3 position, Transform parent)
+        {
+            this.parent = parent;
+            gameObject = Instantiate(LayOutGameObject, position + parent.position, new Quaternion(0, 0, 0, 0), parent);
+        }
+        public Vector3 LocalPosition
+        {
+            get { return gameObject.transform.localPosition; }
+            set { gameObject.transform.localPosition = value; }
+        }
+        public Vector3 AbsPosition
+        {
+            get { return gameObject.transform.position; }
+            set { gameObject.transform.position = value; }
+        }
+        public Color Color
+        {
+            get { return gameObject.GetComponent<Renderer>().material.color; }
+            set { gameObject.GetComponent<Renderer>().material.color = value; }
+        }
+    }
     public class Dots
     {
-        public List<Dot> Alldots = new List<Dot>();
-        public int Count { get {return Alldots.Count; } }
-       public class Dot
+        List<Dot> Alldots = new List<Dot>();
+        public GameObject standartLayoutDot;
+        public Transform parent;
+        public class Dot
         {
             public Vector3 Vector3;
             public List<int> similarDots = new List<int>();
+            public LayOutDot layOutDot;
         }
-
+        public void InitializeLODs()
+        {
+            for (int i = 0; i < Alldots.Count; i++)
+            {
+                Alldots[i].layOutDot = new LayOutDot(standartLayoutDot, Alldots[i].Vector3, parent);
+            }
+        }
         public Dot GetDots(int index)
         {
-            return Alldots[index];
+            foreach (var item in Alldots)
+            {
+                if (item.similarDots.Contains(index))
+                    return item;
+            }
+            return null;
         }
-
         public Dot GetDots(Vector3 vector3)
         {
             foreach (var item in Alldots)
@@ -87,7 +160,7 @@ public class MeshEditor : MonoBehaviour
             }
             return null;
         }
-        public Vector3[] AllVectors
+        public Vector3[] AllVertices
         {
             get
             {
@@ -125,7 +198,7 @@ public class MeshEditor : MonoBehaviour
             }
 
         }
-        public Vector3[] VarVectors
+        public Vector3[] VarVertices
         {
             get
             {
@@ -136,8 +209,46 @@ public class MeshEditor : MonoBehaviour
                 }
                 return vectors.ToArray();
             }
+            set
+            {
+                int ind = 0;
+                foreach (var item in value)
+                {
+                    Alldots[ind].Vector3 = item;
+                    ind++;
+                }
+            }
 
         }
+        public void EditLayouDot(Color color, int index)
+        {
+            for (int i = 0; i < Alldots.Count; i++)
+                if (Alldots[i].similarDots.Contains(index))
+                    Alldots[i].layOutDot.Color = color;
+        }
+        public void EditLayouDot(Vector3 pos, int index)
+        {
+            for (int i = 0; i < Alldots.Count; i++)
+                if (Alldots[i].similarDots.Contains(index))
+                    Alldots[i].layOutDot.LocalPosition = pos;
+        }
+        public void EditLayouDot(Vector3 pos, Color color, int index)
+        {
+            for (int i = 0; i < Alldots.Count; i++)
+                if (Alldots[i].similarDots.Contains(index))
+                {
+                    Alldots[i].layOutDot.LocalPosition = pos;
+                    Alldots[i].layOutDot.Color = color;
+                }
+
+        }
+        public LayOutDot GetLayoutDot(int index)
+        {
+            for (int i = 0; i < Alldots.Count; i++)
+                if (Alldots[i].similarDots.Contains(index))
+                    return Alldots[i].layOutDot;
+            return null;
+        }
     }
- 
+
 }
