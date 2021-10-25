@@ -9,7 +9,7 @@ public class MeshEditor : MonoBehaviour
     Dots dots;
 
     
-    public float MaxDrawDistance = 6;
+    public float MaxDrawDistance = 7;
     public float MinDrawDistance = 3;
     public Vector3[] Vertices;
     public int[] Triangels;
