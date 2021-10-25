@@ -19,6 +19,7 @@ public class MeshEditor : MonoBehaviour
     bool R = false;
 
     Vector3[] defaultVerts;
+
     void Start()
     {
         dots = new Dots();
@@ -34,7 +35,6 @@ public class MeshEditor : MonoBehaviour
         dots.standartLayoutDot = DotLayoutObject;
         dots.InitializeLODs();
     }
-
     private void FixedUpdate()
     {
         if (Space)
