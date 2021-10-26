@@ -27,11 +27,9 @@ public class CameraMovement : MonoBehaviour
     }
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
         originalRotation = transform.rotation;
         foreach (var item in InputSystem.devices)
         {
-           Debug.Log(item.name); 
             item.MakeCurrent();
         }
         mouse = Mouse.current;
@@ -43,13 +41,11 @@ public class CameraMovement : MonoBehaviour
         if (mouse.leftButton.wasPressedThisFrame)
         {
             Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-
             RaycastHit hit;
             Physics.Raycast(ray, out hit, 200);
             
             if (hit.collider != null)
-            {
-                Debug.Log(hit.collider.gameObject.name);
+            { 
                     if (hit.collider.gameObject.tag == "destroyAble")
                     Destroy(hit.collider.gameObject);
             }

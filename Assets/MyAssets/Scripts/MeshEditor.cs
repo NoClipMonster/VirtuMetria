@@ -3,22 +3,28 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class MeshEditor : MonoBehaviour
 {
+    #region Перменные
     Mesh oMesh;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
     Dots dots;
 
-    
+    bool Space = false;
+    bool R = false;
+
+    Vector3[] defaultVerts;
+    #endregion
+
+    #region Публичные переменные
     public float MaxDrawDistance = 7;
     public float MinDrawDistance = 3;
     public Vector3[] Vertices;
     public int[] Triangels;
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
-    bool Space = false;
-    bool R = false;
+    #endregion
 
-    Vector3[] defaultVerts;
+
 
     void Start()
     {
@@ -54,6 +60,7 @@ public class MeshEditor : MonoBehaviour
 
         void UpdateMesh()
         {
+
             oMeshFilter.mesh.vertices = dots.AllVertices;
             oMeshFilter.mesh.RecalculateBounds();
             oMeshFilter.mesh.RecalculateNormals();
@@ -63,6 +70,7 @@ public class MeshEditor : MonoBehaviour
         }
         for (int i = 0; i < dots.VarVertices.Length; i++)
         {
+
             float dist = Vector3.Distance(dots.GetLayoutDot(i).AbsPosition + transform.position, TrackingObject.transform.position);
 
             float alp(float min, float max, float val)
@@ -142,7 +150,7 @@ public class MeshEditor : MonoBehaviour
                 Alldots[i].layOutDot = new LayOutDot(standartLayoutDot, Alldots[i].Vector3, parent);
             }
         }
-        public Dot GetDots(int index)
+        public Dot GetDot(int index)
         {
             foreach (var item in Alldots)
             {
@@ -151,7 +159,7 @@ public class MeshEditor : MonoBehaviour
             }
             return null;
         }
-        public Dot GetDots(Vector3 vector3)
+        public Dot GetDot(Vector3 vector3)
         {
             foreach (var item in Alldots)
             {
@@ -160,6 +168,7 @@ public class MeshEditor : MonoBehaviour
             }
             return null;
         }
+
         public Vector3[] AllVertices
         {
             get
@@ -251,4 +260,20 @@ public class MeshEditor : MonoBehaviour
         }
     }
 
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        hit.gameObject.GetComponent<Renderer>().material.color = Color.red;
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag != "Cube")
+            return;
+        ContactPoint contactPoint = collision.GetContact(0);
+
+        Vector3[] vector3s = dots.VarVertices;
+        foreach (var item in vector3s)
+        {
+            Vector3 buf = Vector3.Cross(item, contactPoint.normal);
+        }
+    }
 }
