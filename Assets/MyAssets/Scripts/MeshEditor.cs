@@ -24,9 +24,6 @@ public class MeshEditor : MonoBehaviour
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
     #endregion
-
-
-
     void Start()
     {
         dots = new Dots();
@@ -108,6 +105,7 @@ public class MeshEditor : MonoBehaviour
         oMeshFilter.mesh.RecalculateTangents();
         oMeshCollider.sharedMesh = oMeshFilter.mesh;
         Vertices = dots.VarVertices;
+
     }
     public class LayOutDot
     {
@@ -170,7 +168,6 @@ public class MeshEditor : MonoBehaviour
             }
             return null;
         }
-
         public Vector3[] AllVertices
         {
             get
@@ -270,41 +267,32 @@ public class MeshEditor : MonoBehaviour
     {
         for (int i = 0; i < dots.VarVertices.Length; i++)
         {
-            dots.EditLayouDot(Color.black, i);
+            dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, i);
         }
     }
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag != "Cube")
             return;
-        ContactPoint contactPoint = collision.GetContact(0);
-        Debug.Log(contactPoint.normal * -1f);
-        Vector3[] vector3s = dots.VarVertices;
-        double bigest = 0;
-        Debug.Log(contactPoint.point - gameObject.transform.position);
-        for (int i = 0; i < vector3s.Length; i++)
-        {
-            double buf = SV(UmV(vector3s[i], contactPoint.normal*-1f));
-            if (bigest < buf)
-                bigest = buf;
-        }
-        for (int i = 0; i < vector3s.Length; i++)
-        {
-            if (SV(UmV(vector3s[i], contactPoint.normal*-1f)) == bigest)
-                dots.EditLayouDot(Color.red, i);
-        }
 
-        double SV(Vector3 vector3)
+         Vector3[] vector3s = dots.VarVertices;
+         Vector3 norm = collision.GetContact(0).normal*-1f;
+         double bigest = double.MinValue;
+
+        for (int i = 0; i < vector3s.Length; i++)
+            bigest = (bigest < DoStuf(vector3s[i])) ? DoStuf(vector3s[i]) : bigest;
+
+        for (int i = 0; i < vector3s.Length; i++)
+             if (DoStuf(vector3s[i]) == bigest)
+                 dots.EditLayouDot(Color.red, i);
+
+        double DoStuf(Vector3 vector)
         {
-            return Math.Round((double)vector3.x + vector3.y + vector3.z, 3);
-        }
-        Vector3 UmV(Vector3 vector, Vector3 vector1)
-        {
-            Vector3 v = vector;
-            v.x *= vector1.x;
-            v.y *= vector1.y;
-            v.z *= vector1.z;
-            return v;
+            Vector3 v = transform.TransformPoint(vector);
+            v.x *= norm.x;
+            v.y *= norm.y;
+            v.z *= norm.z;
+            return Math.Round((double)v.x + v.y + v.z, 1);
         }
 
     }

@@ -47,13 +47,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553c0701b2cf1ff40a162abacb1a5afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam: {fileID: 0}
-  MaxDrawDistance: 3
-  MinDrawDistance: 2.5
+  MaxDrawDistance: 5
+  MinDrawDistance: 4
   Vertices: []
   Triangels: 
   DotLayoutObject: {fileID: 6903278277348259187, guid: 94992ba5c537eb248879148ccf2254f6,
     type: 3}
+  TrackingObject: {fileID: 0}
 --- !u!33 &714836255419991693
 MeshFilter:
   m_ObjectHideFlags: 0

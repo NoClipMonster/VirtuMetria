@@ -402,7 +402,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 424868314}
   m_LocalRotation: {x: -0, y: -0, z: 0.707107, w: 0.7071066}
-  m_LocalPosition: {x: 0.118, y: 2.016, z: 1.035}
+  m_LocalPosition: {x: 0.118, y: 2.229, z: 1.035}
   m_LocalScale: {x: 0.37713668, y: 0.15014, z: 0.15014}
   m_Children: []
   m_Father: {fileID: 0}
@@ -520,7 +520,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac65496190eb8a04dbea7daa3052bced, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseSensitivity: 0.37
+  mouseSensitivity: 0.05
   speed: 2.95
   minimumX: -360
   maximumX: 360
@@ -547,7 +547,7 @@ PrefabInstance:
     - target: {fileID: 1231697709634811319, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.264
+      value: 0.66
       objectReference: {fileID: 0}
     - target: {fileID: 1231697709634811319, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
         type: 3}
@@ -589,35 +589,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3846714044195541710, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_UseGravity
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3846714044195541710, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_Interpolate
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3846714044195541710, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3846714044195541710, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_CollisionDetection
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3879613827245894402, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
         type: 3}
       propertyPath: m_Name
       value: Cube
-      objectReference: {fileID: 0}
-    - target: {fileID: 3879613827245894402, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_TagString
-      value: Untagged
       objectReference: {fileID: 0}
     - target: {fileID: 6650597459306912589, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
         type: 3}
@@ -629,21 +604,5 @@ PrefabInstance:
       propertyPath: TrackingObject
       value: 
       objectReference: {fileID: 935597364}
-    - target: {fileID: 6650597459306912589, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: DotLayoutObject
-      value: 
-      objectReference: {fileID: 6903278277348259187, guid: 94992ba5c537eb248879148ccf2254f6,
-        type: 3}
-    - target: {fileID: 8286286566277712063, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_Convex
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8286286566277712063, guid: 36227ec4f55f00e4cbf9e77b4029f04a,
-        type: 3}
-      propertyPath: m_IsTrigger
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 36227ec4f55f00e4cbf9e77b4029f04a, type: 3}
