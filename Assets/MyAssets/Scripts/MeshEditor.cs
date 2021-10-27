@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -58,16 +59,7 @@ public class MeshEditor : MonoBehaviour
             UpdateMesh();
         }
 
-        void UpdateMesh()
-        {
 
-            oMeshFilter.mesh.vertices = dots.AllVertices;
-            oMeshFilter.mesh.RecalculateBounds();
-            oMeshFilter.mesh.RecalculateNormals();
-            oMeshFilter.mesh.RecalculateTangents();
-            oMeshCollider.sharedMesh = oMeshFilter.mesh;
-            Vertices = dots.VarVertices;
-        }
         for (int i = 0; i < dots.VarVertices.Length; i++)
         {
 
@@ -106,6 +98,16 @@ public class MeshEditor : MonoBehaviour
               dots.VarVertices = ve;
               UpdateMesh();
           }*/
+    }
+    void UpdateMesh()
+    {
+
+        oMeshFilter.mesh.vertices = dots.AllVertices;
+        oMeshFilter.mesh.RecalculateBounds();
+        oMeshFilter.mesh.RecalculateNormals();
+        oMeshFilter.mesh.RecalculateTangents();
+        oMeshCollider.sharedMesh = oMeshFilter.mesh;
+        Vertices = dots.VarVertices;
     }
     public class LayOutDot
     {
@@ -264,16 +266,46 @@ public class MeshEditor : MonoBehaviour
     {
         hit.gameObject.GetComponent<Renderer>().material.color = Color.red;
     }
+    private void OnCollisionExit(Collision collision)
+    {
+        for (int i = 0; i < dots.VarVertices.Length; i++)
+        {
+            dots.EditLayouDot(Color.black, i);
+        }
+    }
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag != "Cube")
             return;
         ContactPoint contactPoint = collision.GetContact(0);
-
+        Debug.Log(contactPoint.normal * -1f);
         Vector3[] vector3s = dots.VarVertices;
-        foreach (var item in vector3s)
+        double bigest = 0;
+        Debug.Log(contactPoint.point - gameObject.transform.position);
+        for (int i = 0; i < vector3s.Length; i++)
         {
-            Vector3 buf = Vector3.Cross(item, contactPoint.normal);
+            double buf = SV(UmV(vector3s[i], contactPoint.normal*-1f));
+            if (bigest < buf)
+                bigest = buf;
         }
+        for (int i = 0; i < vector3s.Length; i++)
+        {
+            if (SV(UmV(vector3s[i], contactPoint.normal*-1f)) == bigest)
+                dots.EditLayouDot(Color.red, i);
+        }
+
+        double SV(Vector3 vector3)
+        {
+            return Math.Round((double)vector3.x + vector3.y + vector3.z, 3);
+        }
+        Vector3 UmV(Vector3 vector, Vector3 vector1)
+        {
+            Vector3 v = vector;
+            v.x *= vector1.x;
+            v.y *= vector1.y;
+            v.z *= vector1.z;
+            return v;
+        }
+
     }
 }
