@@ -9,7 +9,7 @@ public class MeshEditor : MonoBehaviour
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
     Dots dots;
-
+    PlaneWithDots planeWithDots;
     bool Space = false;
     bool R = false;
 
@@ -41,6 +41,13 @@ public class MeshEditor : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        if (Input.GetAxis("Vertical") != 0f && planeWithDots != null)
+        {
+            Vector3 vector = new Vector3(0, Input.GetAxis("Vertical") / 10, 0);
+            planeWithDots.translate(vector);
+            dots.VarVertices = planeWithDots.Vertices;
+            UpdateMesh();
+        }
         if (Space)
         {
             Vector3[] ve = dots.VarVertices;
@@ -87,14 +94,8 @@ public class MeshEditor : MonoBehaviour
         //Input.GetKeyDown(KeyCode.R)
         R = Keyboard.current.rKey.wasPressedThisFrame;
 
+        
 
-        /*  if (Input.GetKeyDown(KeyCode.N))
-          // if (Keyboard.current.nKey.wasPressedThisFrame)
-          {
-              Vector3[] ve = dots.VarVertices;
-              dots.VarVertices = ve;
-              UpdateMesh();
-          }*/
     }
     void UpdateMesh()
     {
@@ -105,7 +106,6 @@ public class MeshEditor : MonoBehaviour
         oMeshFilter.mesh.RecalculateTangents();
         oMeshCollider.sharedMesh = oMeshFilter.mesh;
         Vertices = dots.VarVertices;
-
     }
     public class LayOutDot
     {
@@ -132,6 +132,7 @@ public class MeshEditor : MonoBehaviour
             set { gameObject.GetComponent<Renderer>().material.color = value; }
         }
     }
+
     public class Dots
     {
         List<Dot> Alldots = new List<Dot>();
@@ -259,41 +260,68 @@ public class MeshEditor : MonoBehaviour
         }
     }
 
-    private void OnControllerColliderHit(ControllerColliderHit hit)
+    public class PlaneWithDots
     {
-        hit.gameObject.GetComponent<Renderer>().material.color = Color.red;
+       public Vector3[] Vertices;
+       public List<int> dots = new List<int>();
+        Vector3 norm;
+        
+        public PlaneWithDots(Vector3[] vertices, Collision collision, Transform transform)
+        {
+            Vertices = vertices;
+            norm = collision.GetContact(0).normal * -1f;
+            double bigest = double.MinValue;
+
+            for (int i = 0; i < Vertices.Length; i++)
+                bigest = (bigest < DoStuf(Vertices[i])) ? DoStuf(Vertices[i]) : bigest;
+
+            for (int i = 0; i < Vertices.Length; i++)
+                if (DoStuf(Vertices[i]) == bigest)
+                {
+                    dots.Add(i);
+                }
+
+            double DoStuf(Vector3 vector)
+            {
+                Vector3 v = transform.TransformPoint(vector);
+                v.x *= norm.x;
+                v.y *= norm.y;
+                v.z *= norm.z;
+                return Math.Round((double)v.x + v.y + v.z, 1);
+            }
+        }
+        public void translate(Vector3 vector)
+        {
+            vector.x *= norm.x;
+            vector.y *= norm.y;
+            vector.z *= norm.z;
+            foreach (int i in dots)
+            {
+                Vertices[i] += vector;
+            }
+        }
+
     }
+
     private void OnCollisionExit(Collision collision)
     {
-        for (int i = 0; i < dots.VarVertices.Length; i++)
-        {
-            dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, i);
-        }
+        foreach (var item in planeWithDots.dots)
+            dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, item);
+        planeWithDots = null;
     }
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag != "Cube")
-            return;
-
-         Vector3[] vector3s = dots.VarVertices;
-         Vector3 norm = collision.GetContact(0).normal*-1f;
-         double bigest = double.MinValue;
-
-        for (int i = 0; i < vector3s.Length; i++)
-            bigest = (bigest < DoStuf(vector3s[i])) ? DoStuf(vector3s[i]) : bigest;
-
-        for (int i = 0; i < vector3s.Length; i++)
-             if (DoStuf(vector3s[i]) == bigest)
-                 dots.EditLayouDot(Color.red, i);
-
-        double DoStuf(Vector3 vector)
+        if (collision.gameObject.tag == "Cube"&&planeWithDots == null)
         {
-            Vector3 v = transform.TransformPoint(vector);
-            v.x *= norm.x;
-            v.y *= norm.y;
-            v.z *= norm.z;
-            return Math.Round((double)v.x + v.y + v.z, 1);
+            planeWithDots = new PlaneWithDots(dots.VarVertices, collision, transform);
+            Debug.Log(collision.GetContact(0).normal);
+            foreach (var item in planeWithDots.dots)
+                dots.EditLayouDot(Color.red, item);
+            
         }
-
+            
     }
+
 }
+
