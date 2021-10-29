@@ -6,6 +6,7 @@ TagManager:
   tags:
   - destroyAble
   - Cube
+  - Controller
   layers:
   - Default
   - TransparentFX

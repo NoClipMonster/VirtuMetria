@@ -5,6 +5,7 @@ using Valve.VR;
 
 public class ControllerGrabObject : MonoBehaviour
 {
+    
     public SteamVR_Input_Sources handType;
     public SteamVR_Behaviour_Pose controllerPose;
     public SteamVR_Action_Boolean grabAction;
@@ -20,7 +21,6 @@ public class ControllerGrabObject : MonoBehaviour
             }
         }
 
-        // 2
         if (grabAction.GetLastStateUp(handType))
         {
             if (objectInHand)

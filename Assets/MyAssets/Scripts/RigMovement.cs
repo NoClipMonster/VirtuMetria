@@ -9,23 +9,26 @@ public class RigMovement : MonoBehaviour
     public SteamVR_Action_Boolean grabAction;
     public SteamVR_Action_Vector2 trackPadDir;
     public SteamVR_Action_Boolean trackPadTouched;
-
+   
+    GameObject Rig;
+     void Start()
+    {
+        Rig = GameObject.Find("[CameraRig]");
+    }
     void Update()
     {
         if (GetTeleportDown())
         {
             print("Teleport " + handType);
         }
-
-        if (GettrackPadTouch())
-        {
-            Vector2 dir = GetTrackPadDir();
-            print("Pos = "+dir.x+":"+dir.y  +" in " + handType);
-         //   print("PadTouch");
-        }
         if (GetGrab())
         {
             print("Grab " + handType);
+        }
+        if (TrackPadTouched())
+        {
+            Vector2 dir = GetTrackPadDir()/100;
+            Rig.transform.Translate(new Vector3(dir.x,0,dir.y));
         }
     }
     public bool GetTeleportDown()
@@ -39,6 +42,10 @@ public class RigMovement : MonoBehaviour
     public bool GettrackPadTouch()
     {
         return trackPadTouched.GetStateDown(handType);
+    }
+    public bool TrackPadTouched()
+    {
+        return trackPadTouched.GetState(handType);
     }
     public bool GetGrab()
     {

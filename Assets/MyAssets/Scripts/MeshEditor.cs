@@ -13,20 +13,24 @@ public class MeshEditor : MonoBehaviour
     PlaneWithDots planeWithDots;
     bool Space = false;
     bool R = false;
-
+    GameObject Rig;
     Vector3[] defaultVerts;
     #endregion
 
     #region Публичные переменные
+
     public float MaxDrawDistance = 7;
     public float MinDrawDistance = 3;
     public Vector3[] Vertices;
     public int[] Triangels;
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
+    public SteamVR_Action_Boolean trigerAction;
+    Vector3 controllerPos;
     #endregion
     void Start()
     {
+        Rig = GameObject.Find("[CameraRig]");
         dots = new Dots();
 
         oMeshFilter = GetComponent<MeshFilter>();
@@ -42,21 +46,16 @@ public class MeshEditor : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (Input.GetAxis("Vertical") != 0f && planeWithDots != null)
+        if (trigerAction.stateDown)
         {
-            Vector3 vector = new Vector3(0, Input.GetAxis("Vertical") / 10, 0);
-            planeWithDots.translate(vector);
+            controllerPos = TrackingObject.transform.position;
+        }
+        if (planeWithDots != null && trigerAction.state)
+        {
+            planeWithDots.translate(controllerPos - TrackingObject.transform.position);
             dots.VarVertices = planeWithDots.Vertices;
             UpdateMesh();
-        }
-        if (Space)
-        {
-            Vector3[] ve = dots.VarVertices;
-            for (int i = 0; i < ve.Length; i++)
-                ve[i] = (ve[i].y > 0 && ve[i].x > 0) ? ve[i] + Vector3.one / 100 : ve[i];
-
-            dots.VarVertices = ve;
-            UpdateMesh();
+            controllerPos = TrackingObject.transform.position;
         }
         if (R)
         {
@@ -68,7 +67,7 @@ public class MeshEditor : MonoBehaviour
         for (int i = 0; i < dots.VarVertices.Length; i++)
         {
 
-            float dist = Vector3.Distance(dots.GetLayoutDot(i).AbsPosition + transform.position, TrackingObject.transform.position);
+            float dist = Vector3.Distance(dots.GetLayoutDot(i).AbsPosition, TrackingObject.transform.position);
 
             float alp(float min, float max, float val)
             {
@@ -86,6 +85,7 @@ public class MeshEditor : MonoBehaviour
             color.a = alp(MinDrawDistance, MaxDrawDistance, dist); ;
             dots.EditLayouDot(dots.VarVertices[i], color, i);
         }
+
     }
     void Update()
     {
@@ -111,10 +111,9 @@ public class MeshEditor : MonoBehaviour
     public class LayOutDot
     {
         GameObject gameObject;
-        Transform parent;
+        public bool trigered;
         public LayOutDot(GameObject LayOutGameObject, Vector3 position, Transform parent)
         {
-            this.parent = parent;
             gameObject = Instantiate(LayOutGameObject, position + parent.position, new Quaternion(0, 0, 0, 0), parent);
         }
         public Vector3 LocalPosition
@@ -252,6 +251,16 @@ public class MeshEditor : MonoBehaviour
                 }
 
         }
+        public bool LayoutDotTrigered(int index)
+        {
+            
+            for (int i = 0; i < Alldots.Count; i++)
+                if (Alldots[i].similarDots.Contains(index))
+                {
+                    return Alldots[i].layOutDot.trigered;
+                }
+            return false;
+        }
         public LayOutDot GetLayoutDot(int index)
         {
             for (int i = 0; i < Alldots.Count; i++)
@@ -265,11 +274,11 @@ public class MeshEditor : MonoBehaviour
     {
         public Vector3[] Vertices;
         public List<int> dots = new List<int>();
-        Vector3 norm;
+        Vector3 norm; 
         public PlaneWithDots(Vector3[] vertices, Collision collision, Transform transform)
         {
             Vertices = vertices;
-            norm = collision.GetContact(0).normal * -1f;
+            norm = transform.InverseTransformVector(collision.GetContact(0).normal)*-1;
             double bigest = double.MinValue;
 
             for (int i = 0; i < Vertices.Length; i++)
@@ -293,12 +302,13 @@ public class MeshEditor : MonoBehaviour
         }
         public void translate(Vector3 vector)
         {
+           
             vector.x *= norm.x;
             vector.y *= norm.y;
             vector.z *= norm.z;
             foreach (int i in dots)
             {
-                Vertices[i] += vector;
+                Vertices[i] += vector * -1f;
             }
         }
 
@@ -306,10 +316,11 @@ public class MeshEditor : MonoBehaviour
 
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.tag != "Respawn" && planeWithDots != null)
+        if (collision.gameObject.tag == "Controller" && planeWithDots != null)
         {
             foreach (var item in planeWithDots.dots)
             {
+                
                 dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, item);
                 Debug.Log(item);
             }
@@ -321,14 +332,14 @@ public class MeshEditor : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag != "Respawn" && planeWithDots == null)
+        Debug.Log("Событие");
+        if (collision.gameObject.tag == "Controller" && planeWithDots == null)
         {
             planeWithDots = new PlaneWithDots(dots.VarVertices, collision, transform);
             Debug.Log(collision.GetContact(0).normal);
             foreach (var item in planeWithDots.dots)
                 dots.EditLayouDot(Color.red, item);
         }
-
     }
 
 }
