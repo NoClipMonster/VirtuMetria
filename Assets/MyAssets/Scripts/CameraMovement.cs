@@ -76,8 +76,8 @@ public class CameraMovement : MonoBehaviour
                 transform.position -= newPos * speed * Time.deltaTime;
 
             // перемещение камеры
-            transfer = transform.forward * ((keyboard.wKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.sKey.isPressed ? 1 : 0 * Time.deltaTime));
-            transfer += transform.right * ((keyboard.dKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.aKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transfer = transform.forward * ((keyboard.upArrowKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.downArrowKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transfer += transform.right * ((keyboard.leftArrowKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.rightArrowKey.isPressed ? 1 : 0 * Time.deltaTime));
             transform.position += transfer * speed * Time.deltaTime;  
     }
 

@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Valve.VR;
 public class MeshEditor : MonoBehaviour
 {
-    #region Перменные
+    #region Переменные
     Mesh oMesh;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
@@ -94,7 +95,7 @@ public class MeshEditor : MonoBehaviour
         //Input.GetKeyDown(KeyCode.R)
         R = Keyboard.current.rKey.wasPressedThisFrame;
 
-        
+
 
     }
     void UpdateMesh()
@@ -262,10 +263,9 @@ public class MeshEditor : MonoBehaviour
 
     public class PlaneWithDots
     {
-       public Vector3[] Vertices;
-       public List<int> dots = new List<int>();
+        public Vector3[] Vertices;
+        public List<int> dots = new List<int>();
         Vector3 norm;
-        
         public PlaneWithDots(Vector3[] vertices, Collision collision, Transform transform)
         {
             Vertices = vertices;
@@ -284,6 +284,7 @@ public class MeshEditor : MonoBehaviour
             double DoStuf(Vector3 vector)
             {
                 Vector3 v = transform.TransformPoint(vector);
+
                 v.x *= norm.x;
                 v.y *= norm.y;
                 v.z *= norm.z;
@@ -305,22 +306,29 @@ public class MeshEditor : MonoBehaviour
 
     private void OnCollisionExit(Collision collision)
     {
-        foreach (var item in planeWithDots.dots)
-            dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, item);
-        planeWithDots = null;
+        if (collision.gameObject.tag != "Respawn" && planeWithDots != null)
+        {
+            foreach (var item in planeWithDots.dots)
+            {
+                dots.EditLayouDot(DotLayoutObject.GetComponent<Renderer>().sharedMaterial.color, item);
+                Debug.Log(item);
+            }
+
+            planeWithDots = null;
+        }
+
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Cube"&&planeWithDots == null)
+        if (collision.gameObject.tag != "Respawn" && planeWithDots == null)
         {
             planeWithDots = new PlaneWithDots(dots.VarVertices, collision, transform);
             Debug.Log(collision.GetContact(0).normal);
             foreach (var item in planeWithDots.dots)
                 dots.EditLayouDot(Color.red, item);
-            
         }
-            
+
     }
 
 }
