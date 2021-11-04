@@ -38,28 +38,21 @@ public class CameraMovement : MonoBehaviour
 
     void Update()
     {
-        if (mouse.leftButton.wasPressedThisFrame)
+        if (mouse.leftButton.isPressed)
         {
-            Ray ray = GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-            RaycastHit hit;
-            Physics.Raycast(ray, out hit, 200);
-            
-            if (hit.collider != null)
-            { 
-                    if (hit.collider.gameObject.tag == "destroyAble")
-                    Destroy(hit.collider.gameObject);
-            }
+                rotationX += mouse.delta.x.ReadValue() * mouseSensitivity;
+                rotationY += mouse.delta.y.ReadValue() * mouseSensitivity;
+
+                rotationX = ClampAngle(rotationX, minimumX, maximumX);
+                rotationY = ClampAngle(rotationY, minimumY, maximumY);
+                Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
+                Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
+                transform.rotation = originalRotation * xQuaternion * yQuaternion;
+
         }
         // Движения мыши -> Вращение камеры
 
-            rotationX += mouse.delta.x.ReadValue()  * mouseSensitivity;
-            rotationY += mouse.delta.y.ReadValue() * mouseSensitivity;
-
-            rotationX = ClampAngle(rotationX, minimumX, maximumX);
-            rotationY = ClampAngle(rotationY, minimumY, maximumY);
-            Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
-            Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
-            transform.rotation = originalRotation * xQuaternion * yQuaternion;
+            
 
             // Ускорение при нажатии клавиши Shift
             
@@ -77,7 +70,7 @@ public class CameraMovement : MonoBehaviour
 
             // перемещение камеры
             transfer = transform.forward * ((keyboard.upArrowKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.downArrowKey.isPressed ? 1 : 0 * Time.deltaTime));
-            transfer += transform.right * ((keyboard.leftArrowKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.rightArrowKey.isPressed ? 1 : 0 * Time.deltaTime));
+            transfer += transform.right * ((keyboard.rightArrowKey.isPressed ? 1 : 0 * Time.deltaTime) - (keyboard.leftArrowKey.isPressed ? 1 : 0 * Time.deltaTime));
             transform.position += transfer * speed * Time.deltaTime;  
     }
 
