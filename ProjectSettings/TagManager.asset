@@ -3,19 +3,16 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags:
-  - destroyAble
-  - Cube
-  - Controller
+  tags: []
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Ignore of VR Camera
+  - 
   - Water
   - UI
-  - Ignore of Reserve Camera
-  - DestroyAble
+  - 
+  - 
   - 
   - 
   - 
