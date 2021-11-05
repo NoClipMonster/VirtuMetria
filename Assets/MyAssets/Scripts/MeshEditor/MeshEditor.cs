@@ -8,11 +8,11 @@ public class MeshEditor : MonoBehaviour
     Entity entity;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
-    GameObject Rig;
     List<Vector3> defaultVerts;
     Vector3 controllerPos;
     Vector3 keyAxis;
-    
+    GameObject controller;
+
     #endregion
 
     #region Публичные переменные
@@ -20,15 +20,16 @@ public class MeshEditor : MonoBehaviour
     public float MinDrawDistance = 3;
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
-   // public SteamVR_Action_Boolean trigerAction;
+    public SteamVR_Action_Boolean dotCreate;
+    
     public Vector3 normal;
     public bool KeyboardDebug = false;
     #endregion
 
     void Start()
     {
+        
         entity = new Entity();
-        Rig = GameObject.Find("[CameraRig]");
         oMeshFilter = GetComponent<MeshFilter>();
         oMeshCollider = GetComponent<MeshCollider>();
         
@@ -55,26 +56,17 @@ public class MeshEditor : MonoBehaviour
 
     }
 
-    void FixedUpdate()
-    {
-      /*  if (trigerAction.stateDown)
-        {
-            controllerPos = TrackingObject.transform.position;
-        }
-        if (entity.dotsOnPlane != null && trigerAction.state)
-        {
-            entity.dotsOnPlane.Translate(controllerPos - TrackingObject.transform.position);
-            UpdateMesh();
-            controllerPos = TrackingObject.transform.position;
-        }*/
-       
-
-
-
-    }
 
     void Update()
     {
+        if(dotCreate.stateDown)
+controllerPos = controller.transform.position;
+        if (dotCreate.state && entity.dotsOnPlane.HasPlane == false)
+        {          
+            entity.dotsOnPlane.Translate(controller.transform.position-controllerPos);
+            UpdateMesh();
+            controllerPos = controller.transform.position;
+        }
         for (int i = 0; i < entity.dots.Count; i++)
         {
             float dist = Vector3.Distance(transform.TransformPoint(entity.dots[i].vector3), TrackingObject.transform.position);
@@ -140,14 +132,22 @@ public class MeshEditor : MonoBehaviour
     private void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == true)
+        {
             entity.dotsOnPlane.Excuse();
+
+        }
+           
     }
     
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Событие");
+        Debug.Log("Событие"+ collision.gameObject.name);
         if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == false)
+        {
+            controller = collision.gameObject;
             entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, collision.GetContact(0).normal * -1f, transform);
+        }
+           
     }
     
 }

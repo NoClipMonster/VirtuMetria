@@ -102,7 +102,7 @@ MonoBehaviour:
   DotLayoutObject: {fileID: 6903278277348259187, guid: 94992ba5c537eb248879148ccf2254f6, type: 3}
   TrackingObject: {fileID: 0}
   normal: {x: 0, y: 0, z: 0}
-  KeyboardDebug: 1
+  KeyboardDebug: 0
 --- !u!64 &5938753480867529421
 MeshCollider:
   m_ObjectHideFlags: 0
