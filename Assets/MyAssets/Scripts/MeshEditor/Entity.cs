@@ -63,7 +63,7 @@ public class Entity
             {
                 foreach (var norm in Dots[i].Norms)
                 {
-                    if (norm.normalized == Normal)
+                    if (norm.normalized == Normal&&(Dots[i].vector3.magnitude > (Dots[i].vector3 + norm).magnitude))
                     {
                         indexesOfDots.Add(i);
                         Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
@@ -85,9 +85,6 @@ public class Entity
                 float y = float.Parse(vectr2[1], System.Globalization.NumberStyles.Float);
                 float z = float.Parse(vectr2[2], System.Globalization.NumberStyles.Float);
                 return new Vector3(x, y, z);
-
-
-
             }
         }
 
@@ -106,8 +103,6 @@ public class Entity
                 Vector3 V = new Vector3(vector3.x * Mathf.Abs(Normal.x), vector3.y * Mathf.Abs(Normal.y), vector3.z * Mathf.Abs(Normal.z));
                 Dots[i].Vector3 += V;
             }
-
-
         }
 
         public void Excuse()
@@ -123,7 +118,6 @@ public class Entity
             }
             else
                 Debug.LogError("Удаление удалённого объекта");
-
 
         }
 

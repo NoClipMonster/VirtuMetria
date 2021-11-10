@@ -21,18 +21,18 @@ public class MeshEditor : MonoBehaviour
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
     public SteamVR_Action_Boolean dotCreate;
-    
+
     public Vector3 normal;
     public bool KeyboardDebug = false;
     #endregion
 
     void Start()
     {
-        
+
         entity = new Entity();
         oMeshFilter = GetComponent<MeshFilter>();
         oMeshCollider = GetComponent<MeshCollider>();
-        
+
         bool[] visited = new bool[oMeshFilter.mesh.vertices.Length];
 
         for (int i = 0; i < oMeshFilter.mesh.vertices.Length; i++)
@@ -46,8 +46,8 @@ public class MeshEditor : MonoBehaviour
             {
                 if (oMeshFilter.mesh.vertices[i] == oMeshFilter.mesh.vertices[j])
                 {
-                    entity.dots[i].SimilarDots.Add(j);
-                    entity.dots[i].Norms.Add(oMeshFilter.mesh.normals[j]);
+                    entity.dots[entity.dots.Count-1].SimilarDots.Add(j);
+                    entity.dots[entity.dots.Count - 1].Norms.Add(oMeshFilter.mesh.normals[j]);
                     visited[j] = true;
                 }
 
@@ -59,14 +59,18 @@ public class MeshEditor : MonoBehaviour
 
     void Update()
     {
-        if(dotCreate.stateDown)
-controllerPos = controller.transform.position;
-        if (dotCreate.state && entity.dotsOnPlane.HasPlane == false)
-        {          
-            entity.dotsOnPlane.Translate(controller.transform.position-controllerPos);
-            UpdateMesh();
-            controllerPos = controller.transform.position;
+        if (dotCreate != null)
+        {
+            if (dotCreate.stateDown)
+                controllerPos = controller.transform.position;
+            if (dotCreate.state && entity.dotsOnPlane.HasPlane == false)
+            {
+                entity.dotsOnPlane.Translate(controller.transform.position - controllerPos);
+                UpdateMesh();
+                controllerPos = controller.transform.position;
+            }
         }
+        
         for (int i = 0; i < entity.dots.Count; i++)
         {
             float dist = Vector3.Distance(transform.TransformPoint(entity.dots[i].vector3), TrackingObject.transform.position);
@@ -126,7 +130,7 @@ controllerPos = controller.transform.position;
         oMeshFilter.mesh.RecalculateBounds();
         oMeshFilter.mesh.RecalculateNormals();
         oMeshFilter.mesh.RecalculateTangents();
-        
+
     }
 
     private void OnCollisionExit(Collision collision)
@@ -134,22 +138,22 @@ controllerPos = controller.transform.position;
         if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == true)
         {
             entity.dotsOnPlane.Excuse();
-
         }
-           
+
     }
-    
+   
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Событие"+ collision.gameObject.name);
+        Debug.Log("Событие" + collision.gameObject.name);
         if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == false)
         {
+            normal = entity.dotsOnPlane.Normal;
             controller = collision.gameObject;
-            entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, collision.GetContact(0).normal * -1f, transform);
+            entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, collision.GetContact(0).normal, transform);
         }
-           
+
     }
-    
+
 }
 
 

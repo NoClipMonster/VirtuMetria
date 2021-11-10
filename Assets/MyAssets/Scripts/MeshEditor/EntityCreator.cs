@@ -7,7 +7,6 @@ public class EntityCreator : MonoBehaviour
     {
         myGameObject = new GameObject();
 
-
         myGameObject.name = "Generated:";
     
         myGameObject.transform.position = parent.transform.position + Vector3.one;
