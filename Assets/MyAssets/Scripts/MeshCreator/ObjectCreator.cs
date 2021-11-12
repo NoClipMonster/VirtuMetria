@@ -21,9 +21,9 @@ public class ObjectCreator : MonoBehaviour
         GetComponent<MeshCollider>().convex = true;
 
         List<Vector3> list = new List<Vector3>();
-        list.Add(new Vector3(3, 1, 3));
+        list.Add(new Vector3(1, 0, 1));
+        list.Add(new Vector3(0, 0, 0));
         list.Add(new Vector3(0, 1, 0));
-        list.Add(new Vector3(0, 4, 0));
         transform.position = (list[2] + list[0]) / 2;
 
         foreach (var item in list)

@@ -24,5 +24,21 @@ namespace Valve.VR
                 return SteamVR_Actions.dotCreator_Create;
             }
         }
+        
+        public virtual SteamVR_Action_Pose pose
+        {
+            get
+            {
+                return SteamVR_Actions.dotCreator_pose;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean DragDot
+        {
+            get
+            {
+                return SteamVR_Actions.dotCreator_DragDot;
+            }
+        }
     }
 }

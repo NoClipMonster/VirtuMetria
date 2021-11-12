@@ -144,14 +144,16 @@ public class MeshEditor : MonoBehaviour
    
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Событие" + collision.gameObject.name);
+        Debug.Log("Событие " + collision.gameObject.name+ " " + collision.gameObject.tag);
         if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == false)
         {
-            normal = entity.dotsOnPlane.Normal;
+            
             controller = collision.gameObject;
             entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, collision.GetContact(0).normal, transform);
+            normal = entity.dotsOnPlane.Normal;
+            Debug.Log(entity.dotsOnPlane.Normal);
         }
-
+      
     }
 
 }

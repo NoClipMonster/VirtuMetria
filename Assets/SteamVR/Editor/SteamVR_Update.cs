@@ -36,7 +36,7 @@ namespace Valve.VR
 
         static void Update()
         {
-          /* if (!gotVersion)
+            if (!gotVersion)
             {
                 if (wwwVersion == null)
                     wwwVersion = new WWW(versionUrl);
@@ -59,7 +59,7 @@ namespace Valve.VR
                     window.minSize = new Vector2(320, 440);
                     //window.title = "SteamVR";
                 }
-            }*/
+            }
 
             if (wwwNotes != null)
             {

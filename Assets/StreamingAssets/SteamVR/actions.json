@@ -85,6 +85,14 @@
     {
       "name": "/actions/DotCreator/in/Create",
       "type": "boolean"
+    },
+    {
+      "name": "/actions/DotCreator/in/pose",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/DotCreator/in/DragDot",
+      "type": "boolean"
     }
   ],
   "action_sets": [
