@@ -47,7 +47,7 @@ public class Entity
 
         public DotsOnPlane() { }
 
-        public DotsOnPlane(List<Dot> inDots, Vector3 normal, Transform transform)
+        public DotsOnPlane(List<Dot> inDots, RaycastHit point, Transform transform)
         {
             if (HasPlane)
             {
@@ -55,21 +55,21 @@ public class Entity
                 return;
             }
             Transform = transform;
-            Normal = Converter(transform.InverseTransformDirection(normal.normalized));
+            Normal = Converter(transform.InverseTransformDirection(point.normal.normalized));
             Dots = inDots;
             HasPlane = true;
             indexesOfDots = new List<int>();
+            Plane pl = new Plane(Normal,transform.InverseTransformPoint(point.point));
             for (int i = 0; i < Dots.Count; i++)
             {
-                foreach (var norm in Dots[i].Norms)
+                float fl = pl.GetDistanceToPoint(Dots[i].vector3);
+                if (Mathf.Abs(fl) < 0.0001)
                 {
-                    if (norm.normalized == Normal&&(Dots[i].vector3.magnitude > (Dots[i].vector3 + norm).magnitude))
-                    {
-                        indexesOfDots.Add(i);
-                        Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
-                        break;
-                    }
+                    indexesOfDots.Add(i);
+                    Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
                 }
+                    
+
             }
             Vector3 Converter(Vector3 vect)
             {

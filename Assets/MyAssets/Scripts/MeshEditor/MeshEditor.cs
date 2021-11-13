@@ -22,7 +22,6 @@ public class MeshEditor : MonoBehaviour
     public GameObject TrackingObject;
     public SteamVR_Action_Boolean dotCreate;
 
-    public Vector3 normal;
     public bool KeyboardDebug = false;
     #endregion
 
@@ -46,7 +45,7 @@ public class MeshEditor : MonoBehaviour
             {
                 if (oMeshFilter.mesh.vertices[i] == oMeshFilter.mesh.vertices[j])
                 {
-                    entity.dots[entity.dots.Count-1].SimilarDots.Add(j);
+                    entity.dots[entity.dots.Count - 1].SimilarDots.Add(j);
                     entity.dots[entity.dots.Count - 1].Norms.Add(oMeshFilter.mesh.normals[j]);
                     visited[j] = true;
                 }
@@ -70,7 +69,7 @@ public class MeshEditor : MonoBehaviour
                 controllerPos = controller.transform.position;
             }
         }
-        
+
         for (int i = 0; i < entity.dots.Count; i++)
         {
             float dist = Vector3.Distance(transform.TransformPoint(entity.dots[i].vector3), TrackingObject.transform.position);
@@ -141,19 +140,24 @@ public class MeshEditor : MonoBehaviour
         }
 
     }
-   
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerExit(Collider other)
     {
-        Debug.Log("Событие " + collision.gameObject.name+ " " + collision.gameObject.tag);
-        if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == false)
+        entity.dotsOnPlane.Excuse();
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        //   int layerMask = 1 << 8;
+
+        // This would cast rays only against colliders in layer 8.
+        // But instead we want to collide against everything except layer 8. The ~ operator does this, it inverts a bitmask.
+
+        //  layerMask = ~layerMask;
+
+        RaycastHit hit;
+        if (Physics.Raycast(other.transform.position, transform.position - other.transform.position, out hit, 10000))
         {
-            
-            controller = collision.gameObject;
-            entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, collision.GetContact(0).normal, transform);
-            normal = entity.dotsOnPlane.Normal;
-            Debug.Log(entity.dotsOnPlane.Normal);
+            entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, hit, transform);
         }
-      
     }
 
 }
