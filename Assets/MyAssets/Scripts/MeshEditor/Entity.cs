@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
 
 public class Entity
 {
     public Entity()
     {
         dots = new List<Dot>();
-        dotsOnPlane = new DotsOnPlane();
+        dotsOnPlane = new DotsOnPlane[2];
     }
     public List<Dot> dots;
-    public DotsOnPlane dotsOnPlane;
+    public DotsOnPlane[] dotsOnPlane;
     public class Dot : Entity
     {
         public Vector3 vector3;
@@ -44,11 +45,14 @@ public class Entity
         public List<int> indexesOfDots;
         public List<Dot> Dots;
         public bool HasPlane = false;
-
+        public Collider hand;
+        public SteamVR_Input_Sources side;
         public DotsOnPlane() { }
 
-        public DotsOnPlane(List<Dot> inDots, RaycastHit point, Transform transform)
+        public DotsOnPlane(List<Dot> inDots, RaycastHit point, Transform transform, Collider controller)
         {
+            hand = controller;
+            side = hand.GetComponent<SteamVR_Behaviour_Pose>().inputSource;
             if (HasPlane)
             {
                 Debug.LogError("Повторное задание плоскости");
@@ -65,8 +69,11 @@ public class Entity
                 float fl = pl.GetDistanceToPoint(Dots[i].vector3);
                 if (Mathf.Abs(fl) < 0.0001)
                 {
+                   
                     indexesOfDots.Add(i);
+                    if(side == SteamVR_Input_Sources.LeftHand)
                     Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
+                    else Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
                 }
                     
 
@@ -115,6 +122,7 @@ public class Entity
                 Normal = Vector3.zero;
                 indexesOfDots = null;
                 Dots = null;
+
             }
             else
                 Debug.LogError("Удаление удалённого объекта");
@@ -122,6 +130,12 @@ public class Entity
         }
 
     }
-
+    public void TransformSize(float amount)
+    {
+        foreach (var dot in dots)
+        {
+            dot.Vector3 += dot.Vector3*amount;
+        }
+    }
 }
 

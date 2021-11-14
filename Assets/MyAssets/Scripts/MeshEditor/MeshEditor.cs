@@ -9,10 +9,11 @@ public class MeshEditor : MonoBehaviour
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
     List<Vector3> defaultVerts;
-    Vector3 controllerPos;
     Vector3 keyAxis;
-    GameObject controller;
-
+    bool[] anyMeshEdit = { false, false };
+    bool[] anySizeEdit = { false, false };
+    Vector3[] AnyPossition = new Vector3[2];
+    float distAcrosContrs;
     #endregion
 
     #region Публичные переменные
@@ -20,7 +21,8 @@ public class MeshEditor : MonoBehaviour
     public float MinDrawDistance = 3;
     public GameObject DotLayoutObject;
     public GameObject TrackingObject;
-    public SteamVR_Action_Boolean dotCreate;
+    public SteamVR_Action_Boolean meshEdit;
+    public SteamVR_Action_Boolean sizeEdit;
 
     public bool KeyboardDebug = false;
     #endregion
@@ -58,17 +60,61 @@ public class MeshEditor : MonoBehaviour
 
     void Update()
     {
-        if (dotCreate != null)
+        if (Input.GetKeyDown(KeyCode.Y))
         {
-            if (dotCreate.stateDown)
-                controllerPos = controller.transform.position;
-            if (dotCreate.state && entity.dotsOnPlane.HasPlane == false)
-            {
-                entity.dotsOnPlane.Translate(controller.transform.position - controllerPos);
-                UpdateMesh();
-                controllerPos = controller.transform.position;
-            }
+            anyMeshEdit[0] = !anyMeshEdit[0];
+            AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+            anyMeshEdit[1] = !anyMeshEdit[1];
+            AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
         }
+        if (Input.GetKeyDown(KeyCode.U))
+        {
+            anySizeEdit[0] = !anySizeEdit[0];
+            anySizeEdit[1] = !anySizeEdit[1];
+            distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+        }
+        if (anySizeEdit[0] && anySizeEdit[1])
+        {
+            float v =Vector3.Distance( entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+            entity.TransformSize(v-distAcrosContrs);
+            distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+            transform.position = (entity.dotsOnPlane[0].hand.transform.position + entity.dotsOnPlane[1].hand.transform.position) / 2;
+        }
+            
+        if (meshEdit != null)
+        {
+            if (meshEdit.stateDown)
+                if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
+                {
+                    anyMeshEdit[0] = true;
+                    AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+                }
+                else
+                {
+                    anyMeshEdit[1] = true;
+                    AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
+                }
+            if (meshEdit.stateUp)
+                if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
+                    anyMeshEdit[0] = false;
+                else anyMeshEdit[1] = false;
+
+            
+        }
+        if (anyMeshEdit[0])
+        {
+            entity.dotsOnPlane[0].Translate(entity.dotsOnPlane[0].hand.transform.position - AnyPossition[0]);
+            AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+        }
+
+        if (anyMeshEdit[1])
+        {
+            entity.dotsOnPlane[1].Translate(entity.dotsOnPlane[1].hand.transform.position - AnyPossition[1]);
+            AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
+        }
+
+        if (anyMeshEdit[0] || anyMeshEdit[1]||(anySizeEdit[0] && anySizeEdit[1]))
+            UpdateMesh();
 
         for (int i = 0; i < entity.dots.Count; i++)
         {
@@ -101,16 +147,6 @@ public class MeshEditor : MonoBehaviour
             new EntityCreator(gameObject);
 
         }
-        if (KeyboardDebug && entity.dotsOnPlane.HasPlane == true)
-        {
-            keyAxis = new Vector3 { x = Input.GetAxis("Horizontal"), y = Input.GetAxis("Vertical"), z = 0 };
-            if (keyAxis.magnitude != 0)
-            {
-                entity.dotsOnPlane.Translate(keyAxis / 100);
-
-                UpdateMesh();
-            }
-        }
 
     }
 
@@ -132,17 +168,13 @@ public class MeshEditor : MonoBehaviour
 
     }
 
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.tag == "Controller" && entity.dotsOnPlane.HasPlane == true)
-        {
-            entity.dotsOnPlane.Excuse();
-        }
-
-    }
     private void OnTriggerExit(Collider other)
     {
-        entity.dotsOnPlane.Excuse();
+        SteamVR_Behaviour_Pose SBP = other.GetComponent<SteamVR_Behaviour_Pose>();
+        if (SBP.inputSource == entity.dotsOnPlane[0].side)
+            entity.dotsOnPlane[0].Excuse();
+        else entity.dotsOnPlane[1].Excuse();
+
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -152,12 +184,12 @@ public class MeshEditor : MonoBehaviour
         // But instead we want to collide against everything except layer 8. The ~ operator does this, it inverts a bitmask.
 
         //  layerMask = ~layerMask;
-
         RaycastHit hit;
         if (Physics.Raycast(other.transform.position, transform.position - other.transform.position, out hit, 10000))
-        {
-            entity.dotsOnPlane = new Entity.DotsOnPlane(entity.dots, hit, transform);
-        }
+            if (other.GetComponent<SteamVR_Behaviour_Pose>().inputSource == SteamVR_Input_Sources.LeftHand)
+                entity.dotsOnPlane[0] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
+            else entity.dotsOnPlane[1] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
+
     }
 
 }
