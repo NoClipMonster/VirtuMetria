@@ -75,12 +75,12 @@ public class MeshEditor : MonoBehaviour
         }
         if (anySizeEdit[0] && anySizeEdit[1])
         {
-            float v =Vector3.Distance( entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
-            entity.TransformSize(v-distAcrosContrs);
+            float v = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+            entity.TransformSize(v - distAcrosContrs);
             distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
             transform.position = (entity.dotsOnPlane[0].hand.transform.position + entity.dotsOnPlane[1].hand.transform.position) / 2;
         }
-            
+
         if (meshEdit != null)
         {
             if (meshEdit.stateDown)
@@ -99,7 +99,7 @@ public class MeshEditor : MonoBehaviour
                     anyMeshEdit[0] = false;
                 else anyMeshEdit[1] = false;
 
-            
+
         }
         if (anyMeshEdit[0])
         {
@@ -113,7 +113,7 @@ public class MeshEditor : MonoBehaviour
             AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
         }
 
-        if (anyMeshEdit[0] || anyMeshEdit[1]||(anySizeEdit[0] && anySizeEdit[1]))
+        if (anyMeshEdit[0] || anyMeshEdit[1] || (anySizeEdit[0] && anySizeEdit[1]))
             UpdateMesh();
 
         for (int i = 0; i < entity.dots.Count; i++)
@@ -134,6 +134,7 @@ public class MeshEditor : MonoBehaviour
             color.a = alp(MinDrawDistance, MaxDrawDistance, dist);
             entity.dots[i].LayOutDot.GetComponent<Renderer>().material.color = color;
         }
+
         if (Input.GetKeyDown(KeyCode.R))
         {
             for (int i = 0; i < defaultVerts.Count; i++)

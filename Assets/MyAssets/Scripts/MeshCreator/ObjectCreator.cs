@@ -3,53 +3,23 @@ using TriangleNet;
 using TriangleNet.Geometry;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter))]
-[RequireComponent(typeof(MeshRenderer))]
-[RequireComponent(typeof(MeshCollider))]
 
-public class ObjectCreator : MonoBehaviour
+public class ObjectCreator
 {
-    public GameObject controller;
-    public GameObject dot;
-    GameObject plane;
-    GameObject InvPlane;
-    TriangleNetMesh triangleNetMesh;
+    
+    
 
-    // Start is called before the first frame update
-    void Start()
+    public GameObject CreateSquare(List<Vector3> dots)
     {
-        GetComponent<MeshCollider>().convex = true;
-
-        List<Vector3> list = new List<Vector3>();
-        list.Add(new Vector3(1, 0, 1));
-        list.Add(new Vector3(0, 0, 0));
-        list.Add(new Vector3(0, 1, 0));
-        transform.position = (list[2] + list[0]) / 2;
-
-        foreach (var item in list)
+        GameObject gO = new GameObject();
+        gO.transform.position = (dots[2] + dots[0]) / 2;
+        for (int i = 0; i < dots.Count; i++)
         {
-            Instantiate(dot, item, Quaternion.identity);
+            dots[i] = gO.transform.InverseTransformPoint(dots[i]);
         }
-
-        for (int i = 0; i < list.Count; i++)
-        {
-            list[i] = transform.InverseTransformPoint(list[i]);
-        }
-        CreateSquare(list);
-        GetComponent<MeshCollider>().sharedMesh = GetComponent<MeshFilter>().mesh;
-        gameObject.AddComponent<MeshEditor>().DotLayoutObject = dot;
-        GetComponent<MeshEditor>().KeyboardDebug = true;
-        if (GetComponent<MeshEditor>().KeyboardDebug)
-            GetComponent<MeshEditor>().TrackingObject = Camera.main.gameObject;
-        else GetComponent<MeshEditor>().TrackingObject = controller;
-
-    }
-    private void Update()
-    {
-
-    }
-    void CreateSquare(List<Vector3> dots)
-    {
+        gO.AddComponent<MeshRenderer>();
+        gO.AddComponent<MeshFilter>();
+        gO.AddComponent<MeshCollider>();
         float EdgeLengh = Vector3.Distance(dots[1], dots[2]);
         Vector3 downedge1 = new Vector3(dots[0].x, (dots[0].y), dots[1].z);
         Vector3 downedge2 = new Vector3(dots[1].x, (dots[0].y), dots[0].z);
@@ -70,17 +40,27 @@ public class ObjectCreator : MonoBehaviour
         gameObjects.Add(CreateSqrPlane(downedge1 + ((upedge0 - downedge1) / 2), pl3.normal, EdgeLengh));
         gameObjects.Add(CreateSqrPlane(downedge2 + ((dots[2] - downedge2) / 2), pl3.normal, EdgeLengh));
 
-        GetComponent<MeshFilter>().mesh = CombineObjects(gameObject, gameObjects).GetComponent<MeshFilter>().mesh;
+        gO.GetComponent<MeshFilter>().sharedMesh = CombineObjects(gO, gameObjects).GetComponent<MeshFilter>().sharedMesh;
         foreach (var item in gameObjects)
         {
-            Destroy(item);
+#if UNITY_EDITOR
+            Object.DestroyImmediate(item);
+            Debug.Log("Editor");
+            continue;
+#else 
+Destroy(item);        
+Debug.Log("Game");
+#endif
         }
+        return gO;
     }
 
-    GameObject CreateSqrPlane(Vector3 position, Vector3 normal, float size)
+    public GameObject CreateSqrPlane(Vector3 position, Vector3 normal, float size = 1)
     {
+        TriangleNetMesh triangleNetMesh;
+        GameObject plane;
+        GameObject InvPlane;
         GameObject gObject = new GameObject();
-        gObject.SetActive(false);
         gObject.AddComponent<MeshFilter>();
         gObject.AddComponent<MeshRenderer>();
         gObject.AddComponent<MeshCollider>();
@@ -94,7 +74,6 @@ public class ObjectCreator : MonoBehaviour
         gObject.transform.forward = normal;
 
         plane = new GameObject();
-        plane.SetActive(false);
         plane.transform.parent = gObject.transform;
         plane.name = "CreatedMesh";
         plane.AddComponent<MeshFilter>();
@@ -102,7 +81,6 @@ public class ObjectCreator : MonoBehaviour
 
 
         InvPlane = new GameObject();
-        InvPlane.SetActive(false);
         InvPlane.transform.parent = gObject.transform;
         InvPlane.name = "CreatedInversedMesh";
         InvPlane.AddComponent<MeshFilter>();
@@ -122,32 +100,37 @@ public class ObjectCreator : MonoBehaviour
         triangleNetMesh = (TriangleNetMesh)poly.Triangulate();
 
 
-        meshFilter.mesh = triangleNetMesh.GenerateUnityMesh();
+        meshFilter.sharedMesh = triangleNetMesh.GenerateUnityMesh();
         Mesh inversMesh = triangleNetMesh.GenerateUnityMesh();
 
         List<int> triangles = new List<int>();
         triangles.AddRange(inversMesh.triangles);
         triangles.Reverse();
         inversMesh.SetTriangles(triangles, 0);
-        invMeshFilter.mesh = inversMesh;
+        invMeshFilter.sharedMesh = inversMesh;
 
         List<GameObject> gameObjects = new List<GameObject>();
         gameObjects.Add(plane);
         gameObjects.Add(InvPlane);
 
         MeshFilter mainFilter = gObject.GetComponent<MeshFilter>();
-        mainFilter.mesh = new Mesh();
+        mainFilter.sharedMesh = new Mesh();
         gObject = CombineObjects(gObject, gameObjects);
-        gObject.GetComponent<Renderer>().material = GetComponent<MeshRenderer>().material;
-        mainFilter.mesh.RecalculateBounds();
-        mainFilter.mesh.RecalculateNormals();
-        mainFilter.mesh.RecalculateTangents();
-
+        mainFilter.sharedMesh.RecalculateBounds();
+        mainFilter.sharedMesh.RecalculateNormals();
+        mainFilter.sharedMesh.RecalculateTangents();
+#if UNITY_EDITOR
+        Object.DestroyImmediate(plane);
+        Object.DestroyImmediate(InvPlane);
+#else
         Destroy(plane);
-        Destroy(InvPlane);
+        Destroy(InvPlane);         
+#endif
+
 
         return gObject;
     }
+
     void CreateShape(List<Vector3> vectors)
     {/*
         Plane pl = new Plane(vectors[0], vectors[1], vectors[2]);
@@ -216,16 +199,17 @@ public class ObjectCreator : MonoBehaviour
         Destroy(plane);
         Destroy(InvPlane);*/
     }
+
     GameObject CombineObjects(GameObject mainGameObject, List<GameObject> gameObjects)
     {
         CombineInstance[] combine = new CombineInstance[gameObjects.Count];
         for (int i = 0; i < gameObjects.Count; i++)
         {
-            combine[i].mesh = gameObjects[i].GetComponent<MeshFilter>().mesh;
+            combine[i].mesh = gameObjects[i].GetComponent<MeshFilter>().sharedMesh;
             combine[i].transform = gameObjects[i].GetComponent<MeshFilter>().transform.localToWorldMatrix;
         }
-        mainGameObject.GetComponent<MeshFilter>().mesh = new Mesh();
-        mainGameObject.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
+        mainGameObject.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+        mainGameObject.GetComponent<MeshFilter>().sharedMesh.CombineMeshes(combine);
         return mainGameObject;
     }
 }
