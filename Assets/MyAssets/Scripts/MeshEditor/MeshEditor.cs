@@ -60,6 +60,10 @@ public class MeshEditor : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            ttt = true;
+        }
         if (Input.GetKeyDown(KeyCode.Y))
         {
             anyMeshEdit[0] = !anyMeshEdit[0];
@@ -171,14 +175,38 @@ public class MeshEditor : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (other.gameObject.name == "Section Plane")
+        {
+            gameObject.GetComponent<Renderer>().material = (Material)Resources.Load("BlackMaterial");
+            foreach (var item in entity.dots)
+                item.LayOutDot.GetComponent<Renderer>().material.color = Color.blue;
+            return;
+        }
         SteamVR_Behaviour_Pose SBP = other.GetComponent<SteamVR_Behaviour_Pose>();
         if (SBP.inputSource == entity.dotsOnPlane[0].side)
             entity.dotsOnPlane[0].Excuse();
         else entity.dotsOnPlane[1].Excuse();
 
     }
+    bool ttt = false;
+    private void OnTriggerStay(Collider other)
+    {
+        Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
+
+        foreach (var item in entity.dots)
+        {
+            if (pl.GetSide(item.LayOutDot.transform.position))
+                item.LayOutDot.GetComponent<Renderer>().material.color = Color.green;
+            else item.LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
+        if (other.gameObject.name == "Section Plane")
+        {
+            gameObject.GetComponent<Renderer>().material = (Material)Resources.Load("BlackTranspMaterial");
+            return;
+        }
         //   int layerMask = 1 << 8;
 
         // This would cast rays only against colliders in layer 8.
@@ -192,7 +220,6 @@ public class MeshEditor : MonoBehaviour
             else entity.dotsOnPlane[1] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
 
     }
-
 }
 
 
