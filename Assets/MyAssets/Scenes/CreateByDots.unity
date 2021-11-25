@@ -813,7 +813,7 @@ GameObject:
   - component: {fileID: 988165574}
   - component: {fileID: 988165573}
   - component: {fileID: 988165578}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: CreatedByMenu
   m_Icon: {fileID: 0}
@@ -854,7 +854,7 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 1
+  m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 1230210651}
 --- !u!33 &988165575
@@ -937,7 +937,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 3
+  m_CollisionDetection: 1
 --- !u!1 &1154943662
 GameObject:
   m_ObjectHideFlags: 0
@@ -1439,7 +1439,7 @@ GameObject:
   - component: {fileID: 1380597657}
   - component: {fileID: 1380597656}
   - component: {fileID: 1380597655}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Section Plane
   m_TagString: CreatedByMenu
   m_Icon: {fileID: 0}
@@ -1480,7 +1480,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f1ca75deb61e47c4881f062ea5a72e4c, type: 2}
+  - {fileID: 2100000, guid: edec5251adeacf5428f5637d178fb869, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1517,14 +1517,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1380597654}
-  m_LocalRotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 0.716, y: 0.645, z: 0.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.41781014, y: -0.3481543, z: -0.17734408, w: -0.820227}
+  m_LocalPosition: {x: 0.64, y: 0.333, z: 0.157}
+  m_LocalScale: {x: 1.9723, y: 1.9723, z: 0.01}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1420294117
 GameObject:
   m_ObjectHideFlags: 0

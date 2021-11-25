@@ -15,7 +15,6 @@ public class CameraMovement : MonoBehaviour
     float rotationY = 0f;
     Quaternion originalRotation;
     Vector3 mousePosition;
-
     void Start()
     {
         originalRotation = transform.rotation;

@@ -18,11 +18,13 @@ public class Entity
         public GameObject LayOutDot;
         public Color defaultColor;
         public List<Vector3> Norms;
-        public Dot(Vector3 vector, List<int> simDots, List<Vector3> norms, GameObject layDot)
+        public List<int> triangles;
+        public Dot(Vector3 vector, GameObject layDot)
         {
             vector3 = vector;
-            SimilarDots = simDots;
-            Norms = norms;
+            SimilarDots = new List<int>();
+            Norms = new List<Vector3>();
+            triangles = new List<int>();
             LayOutDot = layDot;
             defaultColor = layDot.GetComponent<Renderer>().material.color;
         }

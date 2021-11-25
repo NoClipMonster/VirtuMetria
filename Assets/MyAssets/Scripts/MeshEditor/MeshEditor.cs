@@ -42,7 +42,7 @@ public class MeshEditor : MonoBehaviour
             {
                 continue;
             }
-            entity.dots.Add(new Entity.Dot(oMeshFilter.mesh.vertices[i], new List<int>(), new List<Vector3>(), Instantiate(DotLayoutObject, transform.TransformPoint(oMeshFilter.mesh.vertices[i]), new Quaternion(0, 0, 0, 0), transform)));
+            entity.dots.Add(new Entity.Dot(oMeshFilter.mesh.vertices[i], Instantiate(DotLayoutObject, transform.TransformPoint(oMeshFilter.mesh.vertices[i]), new Quaternion(0, 0, 0, 0), transform)));
             for (int j = 0; j < oMeshFilter.mesh.vertices.Length; j++)
             {
                 if (oMeshFilter.mesh.vertices[i] == oMeshFilter.mesh.vertices[j])
@@ -50,6 +50,11 @@ public class MeshEditor : MonoBehaviour
                     entity.dots[entity.dots.Count - 1].SimilarDots.Add(j);
                     entity.dots[entity.dots.Count - 1].Norms.Add(oMeshFilter.mesh.normals[j]);
                     visited[j] = true;
+                    for (int k = 0; k < oMeshFilter.mesh.triangles.Length; k++)
+                    {
+                        if (oMeshFilter.mesh.triangles[k] == j && !entity.dots[entity.dots.Count - 1].triangles.Contains(k))
+                            entity.dots[entity.dots.Count - 1].triangles.Add(k / 3);
+                    }
                 }
 
             }
@@ -57,13 +62,38 @@ public class MeshEditor : MonoBehaviour
 
     }
 
-
+    Vector3[] v;
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.H))
+
+        GameObject g = GameObject.Find("Section Plane");
+        RaycastHit hit1;
+        int layerMask = 1 << 6;
+
+        // This would cast rays only against colliders in layer 6.
+        // But instead we want to collide against everything except layer 6. The ~ operator does this, it inverts a bitmask.
+
+        // layerMask = ~layerMask;
+        if (Physics.Raycast(g.transform.position, transform.position - g.transform.position, out hit1, Vector3.Distance(transform.position, g.transform.position), layerMask))
         {
-            ttt = true;
+            Debug.DrawLine(g.transform.position, hit1.point, Color.blue);
+            v = new Vector3[] {
+                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3]],
+                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3+1]],
+                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3+2]]
+            };
+
         }
+        /* if (v != null)
+         {
+             for (int i = 0; i < v.Length - 1; i++)
+             {
+                 Debug.DrawLine(transform.TransformPoint(v[i]), transform.TransformPoint(v[i + 1]), Color.red);
+             }
+             Debug.DrawLine(transform.TransformPoint(v[0]), transform.TransformPoint(v[v.Length - 1]), Color.red);
+
+         }*/
+
         if (Input.GetKeyDown(KeyCode.Y))
         {
             anyMeshEdit[0] = !anyMeshEdit[0];
@@ -79,8 +109,8 @@ public class MeshEditor : MonoBehaviour
         }
         if (anySizeEdit[0] && anySizeEdit[1])
         {
-            float v = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
-            entity.TransformSize(v - distAcrosContrs);
+            float dist = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+            entity.TransformSize(dist - distAcrosContrs);
             distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
             transform.position = (entity.dotsOnPlane[0].hand.transform.position + entity.dotsOnPlane[1].hand.transform.position) / 2;
         }
@@ -188,22 +218,83 @@ public class MeshEditor : MonoBehaviour
         else entity.dotsOnPlane[1].Excuse();
 
     }
-    bool ttt = false;
     private void OnTriggerStay(Collider other)
     {
         Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
 
+        List<Vector3> v = new List<Vector3>();
         foreach (var item in entity.dots)
         {
             if (pl.GetSide(item.LayOutDot.transform.position))
+            {
+
+                foreach (var item2 in item.triangles)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        RaycastHit hit;
+                        int layerMask = 1 << 7;
+                        Vector3 p = transform.TransformPoint(GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[item2 * 3 + i]]);
+                        if (Physics.Raycast(item.LayOutDot.transform.position, (p - item.LayOutDot.transform.position).normalized, out hit, Vector3.Distance(item.LayOutDot.transform.position, p), layerMask))
+                        {
+                            //Instantiate(DotLayoutObject, hit.point, Quaternion.identity);
+                           // Debug.DrawLine(item.LayOutDot.transform.position, hit.point, Color.green);
+
+                            if (!v.Contains(hit.point))
+                                    v.Add(hit.point);
+                        }
+                    }
+                }
                 item.LayOutDot.GetComponent<Renderer>().material.color = Color.green;
-            else item.LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
+            }
+            else
+            {
+                item.LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
+            }
         }
+        List<float> fl = new List<float>();
+        Vector3 avgVect = Vector3.zero;
+        foreach (var item in v)
+            avgVect += item;
+        avgVect /= v.Count;
+        avgVect = other.transform.InverseTransformPoint(avgVect);
+
+
+        foreach (var item in v)
+        {
+            Vector3 buf = other.transform.InverseTransformPoint(item);
+            fl.Add(Vector3.SignedAngle(other.transform.InverseTransformPoint(v[0]) - avgVect, buf - avgVect, other.transform.forward));
+        }
+        for (int i = 0; i < fl.Count; i++)
+        {
+            for (int j = i + 1; j < fl.Count; j++)
+            {
+                if (fl[i] > fl[j])
+                {
+                    float buf = fl[i];
+                    fl[i] = fl[j];
+                    fl[j] = buf;
+                    Vector3 buff = v[i];
+                    v[i] = v[j];
+                    v[j] = buff;
+                }
+            }
+        }
+        if (v != null && v.Count != 0)
+        {
+            for (int i = 0; i < v.Count - 1; i++)
+            {
+                    Debug.DrawLine(v[i], v[i + 1], Color.green);
+            }
+            Debug.DrawLine(v[v.Count - 1], v[0], Color.green);
+        }
+
     }
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.name == "Section Plane")
         {
+
             gameObject.GetComponent<Renderer>().material = (Material)Resources.Load("BlackTranspMaterial");
             return;
         }
@@ -215,9 +306,12 @@ public class MeshEditor : MonoBehaviour
         //  layerMask = ~layerMask;
         RaycastHit hit;
         if (Physics.Raycast(other.transform.position, transform.position - other.transform.position, out hit, 10000))
+        {
             if (other.GetComponent<SteamVR_Behaviour_Pose>().inputSource == SteamVR_Input_Sources.LeftHand)
                 entity.dotsOnPlane[0] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
             else entity.dotsOnPlane[1] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
+        }
+
 
     }
 }
