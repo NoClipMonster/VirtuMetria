@@ -8,8 +8,9 @@ public class MeshEditor : MonoBehaviour
     Entity entity;
     MeshFilter oMeshFilter;
     MeshCollider oMeshCollider;
+#pragma warning disable CS0649 // Field 'MeshEditor.defaultVerts' is never assigned to, and will always have its default value null
     List<Vector3> defaultVerts;
-    Vector3 keyAxis;
+#pragma warning restore CS0649 // Field 'MeshEditor.defaultVerts' is never assigned to, and will always have its default value null
     bool[] anyMeshEdit = { false, false };
     bool[] anySizeEdit = { false, false };
     Vector3[] AnyPossition = new Vector3[2];
@@ -47,13 +48,13 @@ public class MeshEditor : MonoBehaviour
             {
                 if (oMeshFilter.mesh.vertices[i] == oMeshFilter.mesh.vertices[j])
                 {
-                    entity.dots[entity.dots.Count - 1].SimilarDots.Add(j);
-                    entity.dots[entity.dots.Count - 1].Norms.Add(oMeshFilter.mesh.normals[j]);
+                    entity.dots[^1].SimilarDots.Add(j);
+                    entity.dots[^1].Norms.Add(oMeshFilter.mesh.normals[j]);
                     visited[j] = true;
                     for (int k = 0; k < oMeshFilter.mesh.triangles.Length; k++)
                     {
-                        if (oMeshFilter.mesh.triangles[k] == j && !entity.dots[entity.dots.Count - 1].triangles.Contains(k))
-                            entity.dots[entity.dots.Count - 1].triangles.Add(k / 3);
+                        if (oMeshFilter.mesh.triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
+                            entity.dots[^1].triangles.Add(k / 3);
                     }
                 }
 
@@ -62,38 +63,9 @@ public class MeshEditor : MonoBehaviour
 
     }
 
-    Vector3[] v;
+
     void Update()
     {
-
-        GameObject g = GameObject.Find("Section Plane");
-        RaycastHit hit1;
-        int layerMask = 1 << 6;
-
-        // This would cast rays only against colliders in layer 6.
-        // But instead we want to collide against everything except layer 6. The ~ operator does this, it inverts a bitmask.
-
-        // layerMask = ~layerMask;
-        if (Physics.Raycast(g.transform.position, transform.position - g.transform.position, out hit1, Vector3.Distance(transform.position, g.transform.position), layerMask))
-        {
-            Debug.DrawLine(g.transform.position, hit1.point, Color.blue);
-            v = new Vector3[] {
-                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3]],
-                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3+1]],
-                GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[hit1.triangleIndex*3+2]]
-            };
-
-        }
-        /* if (v != null)
-         {
-             for (int i = 0; i < v.Length - 1; i++)
-             {
-                 Debug.DrawLine(transform.TransformPoint(v[i]), transform.TransformPoint(v[i + 1]), Color.red);
-             }
-             Debug.DrawLine(transform.TransformPoint(v[0]), transform.TransformPoint(v[v.Length - 1]), Color.red);
-
-         }*/
-
         if (Input.GetKeyDown(KeyCode.Y))
         {
             anyMeshEdit[0] = !anyMeshEdit[0];
@@ -153,7 +125,8 @@ public class MeshEditor : MonoBehaviour
         for (int i = 0; i < entity.dots.Count; i++)
         {
             float dist = Vector3.Distance(transform.TransformPoint(entity.dots[i].vector3), TrackingObject.transform.position);
-            float alp(float min, float max, float val)
+
+            static float alp(float min, float max, float val)
             {
                 if (val < min)
                     return 1;
@@ -180,7 +153,6 @@ public class MeshEditor : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.T))
         {
             new EntityCreator(gameObject);
-
         }
 
     }
@@ -233,15 +205,11 @@ public class MeshEditor : MonoBehaviour
                     for (int i = 0; i < 3; i++)
                     {
                         RaycastHit hit;
-                        int layerMask = 1 << 7;
                         Vector3 p = transform.TransformPoint(GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[item2 * 3 + i]]);
-                        if (Physics.Raycast(item.LayOutDot.transform.position, (p - item.LayOutDot.transform.position).normalized, out hit, Vector3.Distance(item.LayOutDot.transform.position, p), layerMask))
+                        if (Physics.Raycast(item.LayOutDot.transform.position, (p - item.LayOutDot.transform.position).normalized, out hit, Vector3.Distance(item.LayOutDot.transform.position, p), 1 << 7))
                         {
-                            //Instantiate(DotLayoutObject, hit.point, Quaternion.identity);
-                           // Debug.DrawLine(item.LayOutDot.transform.position, hit.point, Color.green);
-
                             if (!v.Contains(hit.point))
-                                    v.Add(hit.point);
+                                v.Add(hit.point);
                         }
                     }
                 }
@@ -257,13 +225,10 @@ public class MeshEditor : MonoBehaviour
         foreach (var item in v)
             avgVect += item;
         avgVect /= v.Count;
-        avgVect = other.transform.InverseTransformPoint(avgVect);
 
-
-        foreach (var item in v)
+        for (int i = 0; i < v.Count; i++)
         {
-            Vector3 buf = other.transform.InverseTransformPoint(item);
-            fl.Add(Vector3.SignedAngle(other.transform.InverseTransformPoint(v[0]) - avgVect, buf - avgVect, other.transform.forward));
+            fl.Add(Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
         }
         for (int i = 0; i < fl.Count; i++)
         {
@@ -271,22 +236,34 @@ public class MeshEditor : MonoBehaviour
             {
                 if (fl[i] > fl[j])
                 {
-                    float buf = fl[i];
-                    fl[i] = fl[j];
-                    fl[j] = buf;
-                    Vector3 buff = v[i];
-                    v[i] = v[j];
-                    v[j] = buff;
+                    (fl[j], fl[i]) = (fl[i], fl[j]);
+                    (v[j], v[i]) = (v[i], v[j]);
                 }
             }
         }
+        
+
         if (v != null && v.Count != 0)
         {
+            for (int i = 1; i < fl.Count - 1; i++)
+            {
+                if ((v[i + 1] - v[i - 1]).normalized == (v[i] - v[i - 1]).normalized)
+                {
+                    fl.RemoveAt(i);
+                    v.RemoveAt(i);
+                    i--;
+                }
+            }
+            if ((v[1] - v[^1]).normalized == (v[0] - v[^1]).normalized)
+            {
+                fl.RemoveAt(0);
+                v.RemoveAt(0);
+            }
             for (int i = 0; i < v.Count - 1; i++)
             {
-                    Debug.DrawLine(v[i], v[i + 1], Color.green);
+                Debug.DrawLine(v[i], v[i + 1], Color.green);
             }
-            Debug.DrawLine(v[v.Count - 1], v[0], Color.green);
+            Debug.DrawLine(v[^1], v[0], Color.green);
         }
 
     }

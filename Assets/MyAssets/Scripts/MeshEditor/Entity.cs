@@ -80,8 +80,8 @@ public class Entity
 
 
             }
-           
-            Vector3 Converter(Vector3 vect)
+
+            static Vector3 Converter(Vector3 vect)
             {
                 string vectr = vect.normalized.ToString();
                 vectr = vectr.Remove(vectr.Length - 1);

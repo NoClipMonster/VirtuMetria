@@ -105,6 +105,9 @@ public class EditorObjectCreator : EditorWindow
         gO.name = "Section Plane";
         gO.tag = "CreatedByMenu";
         gO.layer = 7;
+        Vector3 scale = gO.transform.lossyScale;
+        scale.z = 0.001f;
+        gO.transform.localScale = scale;
         gO.GetComponent<MeshCollider>().convex = true;
         gO.GetComponent<MeshCollider>().isTrigger = true;
         gO.GetComponent<MeshCollider>().sharedMesh = gO.GetComponent<MeshFilter>().sharedMesh;

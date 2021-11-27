@@ -9,8 +9,7 @@ public class EntityCreator : MonoBehaviour
 
         myGameObject.name = "Generated:";
     
-        myGameObject.transform.position = parent.transform.position + Vector3.one;
-        myGameObject.transform.rotation = parent.transform.rotation;
+        myGameObject.transform.SetPositionAndRotation(parent.transform.position + Vector3.one, parent.transform.rotation);
 
         myGameObject.AddComponent<MeshFilter>();
         myGameObject.GetComponent<MeshFilter>().sharedMesh = parent.GetComponent<MeshFilter>().sharedMesh;
