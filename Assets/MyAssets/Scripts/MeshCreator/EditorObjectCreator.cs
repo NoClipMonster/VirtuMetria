@@ -101,10 +101,12 @@ public class EditorObjectCreator : EditorWindow
         list.Add(new Vector3(0, 0.25f, 1));
         Plane plane = new Plane(list[0], list[1], list[2]);
         ObjectCreator oC = new ObjectCreator();
-        gO = oC.CreateSqrPlane((list[0] + list[1]) / 2, plane.normal);
+        gO = oC.CreateSqrPlane((list[0] + list[1]) / 2, plane.normal,2);
         gO.name = "Section Plane";
         gO.tag = "CreatedByMenu";
+        gO.layer = 7;
         gO.GetComponent<MeshCollider>().convex = true;
+        gO.GetComponent<MeshCollider>().isTrigger = true;
         gO.GetComponent<MeshCollider>().sharedMesh = gO.GetComponent<MeshFilter>().sharedMesh;
         gO.GetComponent<Renderer>().sharedMaterial = (Material)Resources.Load("RedTranspMaterial");
         Undo.RegisterCreatedObjectUndo(gO, "Создание сечения");
