@@ -65,21 +65,22 @@ public class Entity
             Dots = inDots;
             HasPlane = true;
             indexesOfDots = new List<int>();
-            Plane pl = new Plane(Normal,transform.InverseTransformPoint(point.point));
+            Plane pl = new Plane(Normal, transform.InverseTransformPoint(point.point));
             for (int i = 0; i < Dots.Count; i++)
             {
                 float fl = pl.GetDistanceToPoint(Dots[i].vector3);
                 if (Mathf.Abs(fl) < 0.0001)
                 {
-                   
+
                     indexesOfDots.Add(i);
-                    if(side == SteamVR_Input_Sources.LeftHand)
-                    Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
+                    if (side == SteamVR_Input_Sources.LeftHand)
+                        Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
                     else Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
                 }
-                    
+
 
             }
+           
             Vector3 Converter(Vector3 vect)
             {
                 string vectr = vect.normalized.ToString();
@@ -136,7 +137,7 @@ public class Entity
     {
         foreach (var dot in dots)
         {
-            dot.Vector3 += dot.Vector3*amount;
+            dot.Vector3 += dot.Vector3 * amount;
         }
     }
 }
