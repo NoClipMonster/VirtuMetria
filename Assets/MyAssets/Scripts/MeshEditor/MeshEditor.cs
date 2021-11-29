@@ -30,17 +30,6 @@ public class MeshEditor : MonoBehaviour
 
     void Start()
     {
-        int gg = 0;
-        RaycastHit raycastHit;
-        DateTime dateTime = DateTime.Now;
-        for (int i = 0; i < 1000; i++)
-        {
-            if (Physics.Raycast(Vector3.zero, Vector3.up, out raycastHit, 10))
-                gg++;
-        }
-        var dateTime1 = DateTime.Now - dateTime;
-
-
         static Vector3 Converter(Vector3 ve)
         {
             //return ve;
@@ -73,7 +62,7 @@ public class MeshEditor : MonoBehaviour
                     {
                         delKol++;
                         if (triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
-                            entity.dots[^1].triangles.Add(k / 3);
+                            entity.dots[^1].triangles.Add(k - k % 3);
                     }
                 }
 
@@ -186,49 +175,56 @@ public class MeshEditor : MonoBehaviour
      }*/
     private void OnTriggerStay(Collider other)
     {
+        Mesh mesh = GetComponent<MeshFilter>().mesh;
         Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
-       
+
         List<Vector3> v = new List<Vector3>();
         List<int> side = new List<int>();
         List<int> otherSide = new List<int>();
-        DateTime dt = DateTime.Now;
+        DateTime dt1 = DateTime.Now;
+
+        TimeSpan[] dt = new TimeSpan[4];
         for (int i = 0; i < entity.dots.Count; i++)
         {
             Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
-            //Проверка, что хотя бы один сосед лежит на другой стороне
+
             if (pl.GetSide(pos))
                 side.Add(i);
             else
                 otherSide.Add(i);
         }
-        Debug.Log("1 :: " + (DateTime.Now - dt));
-        dt = DateTime.Now;
+
+        Debug.Log("1 :: " + (dt[0] = (DateTime.Now - dt1)));
+        DateTime dt2 = DateTime.Now;
+
         if (side.Count <= otherSide.Count)
             DoStuf(side, true);
         else DoStuf(otherSide, false);
 
+
         void DoStuf(List<int> indexes, bool side)
         {
-            int count = 0;
+
+            int ittcount = 0;
+            int preraycount = 0;
+            int raycount = 0;
             foreach (int i in indexes)
             {
                 Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
-
                 foreach (var item2 in entity.dots[i].triangles)
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        
-                        Vector3 p = transform.TransformPoint(GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[item2 * 3 + j]]);
+                        ittcount++;
+                        Vector3 p = transform.TransformPoint(mesh.vertices[mesh.triangles[item2 + j]]);
                         if (pl.GetSide(p) == side)
                             continue;
 
                         Debug.DrawLine(p, pos, Color.blue, 0f, false);
-                      
-                        RaycastHit hit;
-                        if (Physics.Raycast(pos, (p - pos).normalized, out hit, Vector3.Distance(pos, p), 1 << 7))
+
+                        if (Physics.Raycast(pos, (p - pos).normalized, out RaycastHit hit, Vector3.Distance(pos, p), 1 << 7))
                         {
-                          
+                            raycount++;
                             Vector3 buf = new Vector3((float)Math.Round(hit.point.x, 5), (float)Math.Round(hit.point.y, 5), (float)Math.Round(hit.point.z, 5));
                             if (!v.Contains(buf))
                                 v.Add(buf);
@@ -237,10 +233,10 @@ public class MeshEditor : MonoBehaviour
                 }
 
             }
-            Debug.Log(count);
-            
-            Debug.Log("2 :: " + (DateTime.Now - dt));
-            dt = DateTime.Now;
+            Debug.Log(ittcount + "::" + preraycount + "::" + raycount);
+
+            Debug.Log("2 :: " + (dt[1] = DateTime.Now - dt2));
+            DateTime dt3 = DateTime.Now;
 
             List<float> fl = new List<float>();
             Vector3 avgVect = Vector3.zero;
@@ -268,8 +264,8 @@ public class MeshEditor : MonoBehaviour
                     return true;
                 return false;
             }
-            Debug.Log("3 :: " + (DateTime.Now - dt));
-            dt = DateTime.Now;
+            Debug.Log("3 :: " + (dt[2] = DateTime.Now - dt3));
+            DateTime dt4 = DateTime.Now;
             if (!(v == null || v.Count < 3))
             {
                 for (int i = 0; i < v.Count; i++)
@@ -306,13 +302,14 @@ public class MeshEditor : MonoBehaviour
                 }
                 Debug.DrawLine(v[^1], v[0], Color.green, 0, false);
 
-                Debug.Log("4 :: " + (DateTime.Now - dt));
-                dt = DateTime.Now;
-                Debug.Break();
+
             }
+            Debug.Log("4 :: " + (dt[3] = DateTime.Now - dt4));
+
         }
 
-
+        Debug.Log(dt[0] + dt[1] + dt[2] + dt[3]);
+        // Debug.Break();
     }
     /* private void OnTriggerEnter(Collider other)
      {
