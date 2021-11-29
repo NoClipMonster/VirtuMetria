@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
@@ -20,7 +21,6 @@ public class MeshEditor : MonoBehaviour
     #region ѕубличные переменные
     public float MaxDrawDistance = 7;
     public float MinDrawDistance = 3;
-    public GameObject DotLayoutObject;
     public GameObject TrackingObject;
     public SteamVR_Action_Boolean meshEdit;
     public SteamVR_Action_Boolean sizeEdit;
@@ -30,42 +30,63 @@ public class MeshEditor : MonoBehaviour
 
     void Start()
     {
+        int gg = 0;
+        RaycastHit raycastHit;
+        DateTime dateTime = DateTime.Now;
+        for (int i = 0; i < 1000; i++)
+        {
+            if (Physics.Raycast(Vector3.zero, Vector3.up, out raycastHit, 10))
+                gg++;
+        }
+        var dateTime1 = DateTime.Now - dateTime;
 
+
+        static Vector3 Converter(Vector3 ve)
+        {
+            //return ve;
+            return new Vector3((float)Math.Round(ve.x, 1), (float)Math.Round(ve.y, 1), (float)Math.Round(ve.z, 1));
+        }
         entity = new Entity();
         oMeshFilter = GetComponent<MeshFilter>();
         oMeshCollider = GetComponent<MeshCollider>();
 
         bool[] visited = new bool[oMeshFilter.mesh.vertices.Length];
 
-        for (int i = 0; i < oMeshFilter.mesh.vertices.Length; i++)
+        int delKol = 0;
+        List<Vector3> vectors = new List<Vector3>(oMeshFilter.mesh.vertices);
+        List<int> triangles = new List<int>(oMeshFilter.mesh.triangles);
+        DateTime time = DateTime.Now;
+
+        for (int i = 0; i < vectors.Count; i++)
         {
             if (visited[i])
-            {
                 continue;
-            }
-            entity.dots.Add(new Entity.Dot(oMeshFilter.mesh.vertices[i], Instantiate(DotLayoutObject, transform.TransformPoint(oMeshFilter.mesh.vertices[i]), new Quaternion(0, 0, 0, 0), transform)));
-            for (int j = 0; j < oMeshFilter.mesh.vertices.Length; j++)
+            entity.dots.Add(new Entity.Dot(vectors[i]));
+            for (int j = i; j < vectors.Count; j++)
             {
-                if (oMeshFilter.mesh.vertices[i] == oMeshFilter.mesh.vertices[j])
+                if (Converter(vectors[i]) == Converter(vectors[j]))
                 {
-                    entity.dots[^1].SimilarDots.Add(j);
-                    entity.dots[^1].Norms.Add(oMeshFilter.mesh.normals[j]);
                     visited[j] = true;
+                    entity.dots[^1].SimilarDots.Add(j);
+
                     for (int k = 0; k < oMeshFilter.mesh.triangles.Length; k++)
                     {
-                        if (oMeshFilter.mesh.triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
+                        delKol++;
+                        if (triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
                             entity.dots[^1].triangles.Add(k / 3);
                     }
                 }
 
             }
         }
-
+        Debug.Log(DateTime.Now - time);
+        Debug.Log(delKol);
     }
 
 
     void Update()
     {
+
         if (Input.GetKeyDown(KeyCode.Y))
         {
             anyMeshEdit[0] = !anyMeshEdit[0];
@@ -122,26 +143,6 @@ public class MeshEditor : MonoBehaviour
         if (anyMeshEdit[0] || anyMeshEdit[1] || (anySizeEdit[0] && anySizeEdit[1]))
             UpdateMesh();
 
-        for (int i = 0; i < entity.dots.Count; i++)
-        {
-            float dist = Vector3.Distance(transform.TransformPoint(entity.dots[i].vector3), TrackingObject.transform.position);
-
-            static float alp(float min, float max, float val)
-            {
-                if (val < min)
-                    return 1;
-                if (val > max)
-                    return 0;
-                else
-                {
-                    return 1 - ((val - min) / (max - min));
-                }
-            }
-            Color color = entity.dots[i].LayOutDot.GetComponent<Renderer>().material.color;
-            color.a = alp(MinDrawDistance, MaxDrawDistance, dist);
-            entity.dots[i].LayOutDot.GetComponent<Renderer>().material.color = color;
-        }
-
         if (Input.GetKeyDown(KeyCode.R))
         {
             for (int i = 0; i < defaultVerts.Count; i++)
@@ -156,7 +157,6 @@ public class MeshEditor : MonoBehaviour
         }
 
     }
-
     void UpdateMesh()
     {
         Vector3[] vertices = new Vector3[oMeshFilter.mesh.vertices.Length];
@@ -175,122 +175,165 @@ public class MeshEditor : MonoBehaviour
 
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.name == "Section Plane")
-        {
-            gameObject.GetComponent<Renderer>().material = (Material)Resources.Load("BlackMaterial");
-            foreach (var item in entity.dots)
-                item.LayOutDot.GetComponent<Renderer>().material.color = Color.blue;
-            return;
-        }
-        SteamVR_Behaviour_Pose SBP = other.GetComponent<SteamVR_Behaviour_Pose>();
-        if (SBP.inputSource == entity.dotsOnPlane[0].side)
-            entity.dotsOnPlane[0].Excuse();
-        else entity.dotsOnPlane[1].Excuse();
+    /* private void OnTriggerExit(Collider other)
+     {
 
-    }
+          SteamVR_Behaviour_Pose SBP = other.GetComponent<SteamVR_Behaviour_Pose>();
+          if (SBP.inputSource == entity.dotsOnPlane[0].side)
+              entity.dotsOnPlane[0].Excuse();
+          else entity.dotsOnPlane[1].Excuse();
+
+     }*/
     private void OnTriggerStay(Collider other)
     {
         Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
-
+       
         List<Vector3> v = new List<Vector3>();
-        foreach (var item in entity.dots)
+        List<int> side = new List<int>();
+        List<int> otherSide = new List<int>();
+        DateTime dt = DateTime.Now;
+        for (int i = 0; i < entity.dots.Count; i++)
         {
-            if (pl.GetSide(item.LayOutDot.transform.position))
-            {
+            Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
+            //ѕроверка, что хот€ бы один сосед лежит на другой стороне
+            if (pl.GetSide(pos))
+                side.Add(i);
+            else
+                otherSide.Add(i);
+        }
+        Debug.Log("1 :: " + (DateTime.Now - dt));
+        dt = DateTime.Now;
+        if (side.Count <= otherSide.Count)
+            DoStuf(side, true);
+        else DoStuf(otherSide, false);
 
-                foreach (var item2 in item.triangles)
+        void DoStuf(List<int> indexes, bool side)
+        {
+            int count = 0;
+            foreach (int i in indexes)
+            {
+                Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
+
+                foreach (var item2 in entity.dots[i].triangles)
                 {
-                    for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++)
                     {
+                        
+                        Vector3 p = transform.TransformPoint(GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[item2 * 3 + j]]);
+                        if (pl.GetSide(p) == side)
+                            continue;
+
+                        Debug.DrawLine(p, pos, Color.blue, 0f, false);
+                      
                         RaycastHit hit;
-                        Vector3 p = transform.TransformPoint(GetComponent<MeshFilter>().mesh.vertices[GetComponent<MeshFilter>().mesh.triangles[item2 * 3 + i]]);
-                        if (Physics.Raycast(item.LayOutDot.transform.position, (p - item.LayOutDot.transform.position).normalized, out hit, Vector3.Distance(item.LayOutDot.transform.position, p), 1 << 7))
+                        if (Physics.Raycast(pos, (p - pos).normalized, out hit, Vector3.Distance(pos, p), 1 << 7))
                         {
-                            if (!v.Contains(hit.point))
-                                v.Add(hit.point);
+                          
+                            Vector3 buf = new Vector3((float)Math.Round(hit.point.x, 5), (float)Math.Round(hit.point.y, 5), (float)Math.Round(hit.point.z, 5));
+                            if (!v.Contains(buf))
+                                v.Add(buf);
                         }
                     }
                 }
-                item.LayOutDot.GetComponent<Renderer>().material.color = Color.green;
-            }
-            else
-            {
-                item.LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
-            }
-        }
-        List<float> fl = new List<float>();
-        Vector3 avgVect = Vector3.zero;
-        foreach (var item in v)
-            avgVect += item;
-        avgVect /= v.Count;
 
-        for (int i = 0; i < v.Count; i++)
-        {
-            fl.Add(Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
-        }
-        for (int i = 0; i < fl.Count; i++)
-        {
-            for (int j = i + 1; j < fl.Count; j++)
+            }
+            Debug.Log(count);
+            
+            Debug.Log("2 :: " + (DateTime.Now - dt));
+            dt = DateTime.Now;
+
+            List<float> fl = new List<float>();
+            Vector3 avgVect = Vector3.zero;
+            foreach (var item in v)
+                avgVect += item;
+            avgVect /= v.Count;
+
+            for (int i = 0; i < v.Count; i++)
             {
-                if (fl[i] > fl[j])
+                fl.Add(Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
+            }
+            for (int i = 1; i < fl.Count; i++)
+            {
+                if (fl[i] < fl[i - 1])
                 {
-                    (fl[j], fl[i]) = (fl[i], fl[j]);
-                    (v[j], v[i]) = (v[i], v[j]);
+                    (fl[i], fl[i - 1]) = (fl[i - 1], fl[i]);
+                    (v[i], v[i - 1]) = (v[i - 1], v[i]);
+                    if (i > 1)
+                        i -= 2;
                 }
             }
-        }
-        
-
-        if (v != null && v.Count != 0)
-        {
-            for (int i = 1; i < fl.Count - 1; i++)
+            bool btv(Vector3 first, Vector3 second, Vector3 third)
             {
-                if ((v[i + 1] - v[i - 1]).normalized == (v[i] - v[i - 1]).normalized)
+                if (Math.Round((Vector3.Distance(first, second) + Vector3.Distance(second, third)), 5) == Math.Round(Vector3.Distance(first, third), 5))
+                    return true;
+                return false;
+            }
+            Debug.Log("3 :: " + (DateTime.Now - dt));
+            dt = DateTime.Now;
+            if (!(v == null || v.Count < 3))
+            {
+                for (int i = 0; i < v.Count; i++)
                 {
-                    fl.RemoveAt(i);
-                    v.RemoveAt(i);
-                    i--;
+                    if (i == 0)
+                    {
+                        if (btv(v[^1], v[0], v[1]))
+                        {
+                            fl.RemoveAt(0);
+                            v.RemoveAt(0);
+                            i--;
+                        }
+                    }
+                    else if (i == v.Count - 1)
+                    {
+                        if (btv(v[^2], v[^1], v[0]))
+                        {
+                            fl.RemoveAt(i);
+                            v.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    else if (btv(v[i - 1], v[i], v[i + 1]))
+                    {
+                        fl.RemoveAt(i);
+                        v.RemoveAt(i);
+                        i--;
+                    }
                 }
+
+                for (int i = 0; i < v.Count - 1; i++)
+                {
+                    Debug.DrawLine(v[i], v[i + 1], Color.green, 0, false);
+                }
+                Debug.DrawLine(v[^1], v[0], Color.green, 0, false);
+
+                Debug.Log("4 :: " + (DateTime.Now - dt));
+                dt = DateTime.Now;
+                Debug.Break();
             }
-            if ((v[1] - v[^1]).normalized == (v[0] - v[^1]).normalized)
-            {
-                fl.RemoveAt(0);
-                v.RemoveAt(0);
-            }
-            for (int i = 0; i < v.Count - 1; i++)
-            {
-                Debug.DrawLine(v[i], v[i + 1], Color.green);
-            }
-            Debug.DrawLine(v[^1], v[0], Color.green);
-        }
-
-    }
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.name == "Section Plane")
-        {
-
-            gameObject.GetComponent<Renderer>().material = (Material)Resources.Load("BlackTranspMaterial");
-            return;
-        }
-        //   int layerMask = 1 << 8;
-
-        // This would cast rays only against colliders in layer 8.
-        // But instead we want to collide against everything except layer 8. The ~ operator does this, it inverts a bitmask.
-
-        //  layerMask = ~layerMask;
-        RaycastHit hit;
-        if (Physics.Raycast(other.transform.position, transform.position - other.transform.position, out hit, 10000))
-        {
-            if (other.GetComponent<SteamVR_Behaviour_Pose>().inputSource == SteamVR_Input_Sources.LeftHand)
-                entity.dotsOnPlane[0] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
-            else entity.dotsOnPlane[1] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
         }
 
 
     }
+    /* private void OnTriggerEnter(Collider other)
+     {
+
+         //   int layerMask = 1 << 8;
+
+         // This would cast rays only against colliders in layer 8.
+         // But instead we want to collide against everything except layer 8. The ~ operator does this, it inverts a bitmask.
+
+         //  layerMask = ~layerMask;
+
+         RaycastHit hit;
+         if (Physics.Raycast(other.transform.position, transform.position - other.transform.position, out hit, 10000))
+         {
+             if (other.GetComponent<SteamVR_Behaviour_Pose>().inputSource == SteamVR_Input_Sources.LeftHand)
+                 entity.dotsOnPlane[0] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
+             else entity.dotsOnPlane[1] = new Entity.DotsOnPlane(entity.dots, hit, transform, other);
+         }
+
+
+     }*/
 }
 
 

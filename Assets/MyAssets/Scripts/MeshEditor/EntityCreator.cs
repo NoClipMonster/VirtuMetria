@@ -17,7 +17,6 @@ public class EntityCreator : MonoBehaviour
         myGameObject.AddComponent<MeshRenderer>();
 
         myGameObject.AddComponent<MeshEditor>();
-        myGameObject.GetComponent<MeshEditor>().DotLayoutObject = parent.GetComponent<MeshEditor>().DotLayoutObject;
         myGameObject.GetComponent<MeshEditor>().TrackingObject = parent.GetComponent<MeshEditor>().TrackingObject;
 
         myGameObject.AddComponent<MeshCollider>();

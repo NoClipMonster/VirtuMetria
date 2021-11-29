@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 
@@ -15,28 +16,19 @@ public class Entity
     {
         public Vector3 vector3;
         public List<int> SimilarDots = new List<int>();
-        public GameObject LayOutDot;
-        public Color defaultColor;
-        public List<Vector3> Norms;
         public List<int> triangles;
-        public Dot(Vector3 vector, GameObject layDot)
+        public Dot(Vector3 vector)
         {
             vector3 = vector;
             SimilarDots = new List<int>();
-            Norms = new List<Vector3>();
             triangles = new List<int>();
-            LayOutDot = layDot;
-            defaultColor = layDot.GetComponent<Renderer>().material.color;
         }
 
         public Vector3 Vector3
         {
+            
             get { return vector3; }
-            set
-            {
-                vector3 = value;
-                LayOutDot.transform.localPosition = value;
-            }
+            set { vector3 = value; }
         }
 
     }
@@ -71,30 +63,14 @@ public class Entity
                 float fl = pl.GetDistanceToPoint(Dots[i].vector3);
                 if (Mathf.Abs(fl) < 0.0001)
                 {
-
                     indexesOfDots.Add(i);
-                    if (side == SteamVR_Input_Sources.LeftHand)
-                        Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.red;
-                    else Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Color.yellow;
                 }
-
-
             }
 
-            static Vector3 Converter(Vector3 vect)
+            static Vector3 Converter(Vector3 ve)
             {
-                string vectr = vect.normalized.ToString();
-                vectr = vectr.Remove(vectr.Length - 1);
-                vectr = vectr.Remove(0, 1);
-
-                string[] vectr2 = vectr.Split(',');
-                for (int i = 0; i < vectr2.Length; i++)
-                    vectr2[i] = vectr2[i].Replace(".", ",");
-
-                float x = float.Parse(vectr2[0], System.Globalization.NumberStyles.Float);
-                float y = float.Parse(vectr2[1], System.Globalization.NumberStyles.Float);
-                float z = float.Parse(vectr2[2], System.Globalization.NumberStyles.Float);
-                return new Vector3(x, y, z);
+                //return ve;
+                return new Vector3((float)Math.Round(ve.x, 3), (float)Math.Round(ve.y, 3), (float)Math.Round(ve.z, 3));
             }
         }
 
@@ -120,8 +96,6 @@ public class Entity
             if (HasPlane)
             {
                 HasPlane = false;
-                foreach (int i in indexesOfDots)
-                    Dots[i].LayOutDot.GetComponent<Renderer>().material.color = Dots[i].defaultColor;
                 Normal = Vector3.zero;
                 indexesOfDots = null;
                 Dots = null;
