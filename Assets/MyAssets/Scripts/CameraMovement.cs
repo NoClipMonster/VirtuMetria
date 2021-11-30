@@ -52,15 +52,15 @@ public class CameraMovement : MonoBehaviour
         // ѕодн€тие и опускание камеры
         Vector3 newPos = new Vector3(0, 1, 0);
         if (Input.GetKey(KeyCode.Q))
-            transform.position += newPos * speed * Time.deltaTime;
+            transform.position += speed * Time.deltaTime * newPos;
         else if (Input.GetKey(KeyCode.E))
-            transform.position -= newPos * speed * Time.deltaTime;
+            transform.position -= speed * Time.deltaTime * newPos;
 
         // перемещение камеры
         transfer = transform.forward * (((Input.GetKey(KeyCode.UpArrow) ? 1 : 0)) - ((Input.GetKey(KeyCode.DownArrow) ? 1 : 0)));
         transfer += transform.right * (((Input.GetKey(KeyCode.RightArrow) ? 1 : 0)) - ((Input.GetKey(KeyCode.LeftArrow) ? 1 : 0)));
         transfer += transform.up * (((Input.GetKey(KeyCode.Keypad0) ? 1 : 0)) - ((Input.GetKey(KeyCode.Keypad1  ) ? 1 : 0)));
-        transform.position += transfer * speed * Time.deltaTime;
+        transform.position += speed * Time.deltaTime * transfer;
     }
   
 

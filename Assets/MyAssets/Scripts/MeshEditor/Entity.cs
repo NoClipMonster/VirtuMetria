@@ -10,6 +10,7 @@ public class Entity
         dots = new List<Dot>();
         dotsOnPlane = new DotsOnPlane[2];
     }
+    public float BigestEdge = 0;
     public List<Dot> dots;
     public DotsOnPlane[] dotsOnPlane;
     public class Dot : Entity
@@ -17,6 +18,7 @@ public class Entity
         public Vector3 vector3;
         public List<int> SimilarDots = new List<int>();
         public List<int> triangles;
+  
         public Dot(Vector3 vector)
         {
             vector3 = vector;

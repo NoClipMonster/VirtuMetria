@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using Valve.VR;
 public class MeshEditor : MonoBehaviour
@@ -32,7 +33,6 @@ public class MeshEditor : MonoBehaviour
     {
         static Vector3 Converter(Vector3 ve)
         {
-            //return ve;
             return new Vector3((float)Math.Round(ve.x, 1), (float)Math.Round(ve.y, 1), (float)Math.Round(ve.z, 1));
         }
         entity = new Entity();
@@ -44,7 +44,6 @@ public class MeshEditor : MonoBehaviour
         int delKol = 0;
         List<Vector3> vectors = new List<Vector3>(oMeshFilter.mesh.vertices);
         List<int> triangles = new List<int>(oMeshFilter.mesh.triangles);
-        DateTime time = DateTime.Now;
 
         for (int i = 0; i < vectors.Count; i++)
         {
@@ -60,92 +59,101 @@ public class MeshEditor : MonoBehaviour
 
                     for (int k = 0; k < oMeshFilter.mesh.triangles.Length; k++)
                     {
+                        //TODO: Перевести  entity.dots[^1].triangles из mesh.triangles в в dots[]
                         delKol++;
                         if (triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
-                            entity.dots[^1].triangles.Add(k - k % 3);
+                            entity.dots[^1].triangles.Add(k - (k % 3));
+                        /*for (int l = 0; l < 3; l++)
+                        {
+                            float dist = Math.Abs(Vector3.Distance(oMeshFilter.mesh.vertices[oMeshFilter.mesh.triangles[(k - (k % 3)) + l]], entity.dots[^1].vector3));
+
+                            if (entity.BigestEdge < dist)
+                                entity.BigestEdge = dist;
+                        }*/
+
                     }
                 }
 
             }
         }
-        Debug.Log(DateTime.Now - time);
-        Debug.Log(delKol);
+
+
     }
 
-
-    void Update()
-    {
-
-        if (Input.GetKeyDown(KeyCode.Y))
+    /*
+        void Update()
         {
-            anyMeshEdit[0] = !anyMeshEdit[0];
-            AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
-            anyMeshEdit[1] = !anyMeshEdit[1];
-            AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
-        }
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            anySizeEdit[0] = !anySizeEdit[0];
-            anySizeEdit[1] = !anySizeEdit[1];
-            distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
-        }
-        if (anySizeEdit[0] && anySizeEdit[1])
-        {
-            float dist = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
-            entity.TransformSize(dist - distAcrosContrs);
-            distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
-            transform.position = (entity.dotsOnPlane[0].hand.transform.position + entity.dotsOnPlane[1].hand.transform.position) / 2;
-        }
 
-        if (meshEdit != null)
-        {
-            if (meshEdit.stateDown)
-                if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
-                {
-                    anyMeshEdit[0] = true;
-                    AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
-                }
-                else
-                {
-                    anyMeshEdit[1] = true;
-                    AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
-                }
-            if (meshEdit.stateUp)
-                if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
-                    anyMeshEdit[0] = false;
-                else anyMeshEdit[1] = false;
-
-
-        }
-        if (anyMeshEdit[0])
-        {
-            entity.dotsOnPlane[0].Translate(entity.dotsOnPlane[0].hand.transform.position - AnyPossition[0]);
-            AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
-        }
-
-        if (anyMeshEdit[1])
-        {
-            entity.dotsOnPlane[1].Translate(entity.dotsOnPlane[1].hand.transform.position - AnyPossition[1]);
-            AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
-        }
-
-        if (anyMeshEdit[0] || anyMeshEdit[1] || (anySizeEdit[0] && anySizeEdit[1]))
-            UpdateMesh();
-
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            for (int i = 0; i < defaultVerts.Count; i++)
+            if (Input.GetKeyDown(KeyCode.Y))
             {
-                entity.dots[i].vector3 = defaultVerts[i];
+                anyMeshEdit[0] = !anyMeshEdit[0];
+                AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+                anyMeshEdit[1] = !anyMeshEdit[1];
+                AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
             }
-            UpdateMesh();
-        }
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            new EntityCreator(gameObject);
-        }
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                anySizeEdit[0] = !anySizeEdit[0];
+                anySizeEdit[1] = !anySizeEdit[1];
+                distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+            }
+            if (anySizeEdit[0] && anySizeEdit[1])
+            {
+                float dist = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+                entity.TransformSize(dist - distAcrosContrs);
+                distAcrosContrs = Vector3.Distance(entity.dotsOnPlane[0].hand.transform.position, entity.dotsOnPlane[1].hand.transform.position);
+                transform.position = (entity.dotsOnPlane[0].hand.transform.position + entity.dotsOnPlane[1].hand.transform.position) / 2;
+            }
 
-    }
+            if (meshEdit != null)
+            {
+                if (meshEdit.stateDown)
+                    if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
+                    {
+                        anyMeshEdit[0] = true;
+                        AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+                    }
+                    else
+                    {
+                        anyMeshEdit[1] = true;
+                        AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
+                    }
+                if (meshEdit.stateUp)
+                    if (meshEdit.activeDevice == SteamVR_Input_Sources.LeftHand)
+                        anyMeshEdit[0] = false;
+                    else anyMeshEdit[1] = false;
+
+
+            }
+            if (anyMeshEdit[0])
+            {
+                entity.dotsOnPlane[0].Translate(entity.dotsOnPlane[0].hand.transform.position - AnyPossition[0]);
+                AnyPossition[0] = entity.dotsOnPlane[0].hand.transform.position;
+            }
+
+            if (anyMeshEdit[1])
+            {
+                entity.dotsOnPlane[1].Translate(entity.dotsOnPlane[1].hand.transform.position - AnyPossition[1]);
+                AnyPossition[1] = entity.dotsOnPlane[1].hand.transform.position;
+            }
+
+            if (anyMeshEdit[0] || anyMeshEdit[1] || (anySizeEdit[0] && anySizeEdit[1]))
+                UpdateMesh();
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                for (int i = 0; i < defaultVerts.Count; i++)
+                {
+                    entity.dots[i].vector3 = defaultVerts[i];
+                }
+                UpdateMesh();
+            }
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                new EntityCreator(gameObject);
+            }
+
+        }*/
     void UpdateMesh()
     {
         Vector3[] vertices = new Vector3[oMeshFilter.mesh.vertices.Length];
@@ -173,129 +181,168 @@ public class MeshEditor : MonoBehaviour
           else entity.dotsOnPlane[1].Excuse();
 
      }*/
+
+
     private void OnTriggerStay(Collider other)
     {
+
         Mesh mesh = GetComponent<MeshFilter>().mesh;
+
         Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
 
         List<Vector3> v = new List<Vector3>();
         List<int> side = new List<int>();
         List<int> otherSide = new List<int>();
-        DateTime dt1 = DateTime.Now;
-
-        TimeSpan[] dt = new TimeSpan[4];
-        for (int i = 0; i < entity.dots.Count; i++)
-        {
-            Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
-
-            if (pl.GetSide(pos))
-                side.Add(i);
-            else
-                otherSide.Add(i);
-        }
-
-        Debug.Log("1 :: " + (dt[0] = (DateTime.Now - dt1)));
-        DateTime dt2 = DateTime.Now;
+        Vector3 tranPos = transform.position;
+        Vector3 pos;
+        int entityCount = entity.dots.Count;
+        Thread thread1 = new Thread(() => {
+            for (int i = 0; i < entityCount/3; i++)
+            {
+                pos = entity.dots[i].vector3 + tranPos;
+                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
+                if (pl.GetSide(pos))
+                    side.Add(i);
+                else
+                    otherSide.Add(i);
+            }
+        });
+        Thread thread2 = new Thread(() => {
+            for (int i = entityCount / 3; i < (entityCount /3)*2; i++)
+            {
+                pos = entity.dots[i].vector3 + tranPos;
+                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
+                if (pl.GetSide(pos))
+                    side.Add(i);
+                else
+                    otherSide.Add(i);
+            }
+        });
+        Thread thread3 = new Thread(() => {
+            for (int i = (entityCount / 3) * 2; i < entityCount; i++)
+            {
+                pos = entity.dots[i].vector3 + tranPos;
+                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
+                if (pl.GetSide(pos))
+                    side.Add(i);
+                else
+                    otherSide.Add(i);
+            }
+        });
+        thread1.Start();
+        thread2.Start();
+        thread3.Start();
+        do { }while (thread1.IsAlive || thread2.IsAlive ||thread3.IsAlive);
 
         if (side.Count <= otherSide.Count)
             DoStuf(side, true);
         else DoStuf(otherSide, false);
 
-
         void DoStuf(List<int> indexes, bool side)
         {
-
-            int ittcount = 0;
-            int preraycount = 0;
-            int raycount = 0;
-            foreach (int i in indexes)
+            int inKol = indexes.Count;
+            Vector3 pos;
+            Vector3 p;
+            Vector3 buf;
+            for (int i = 0; i < inKol; i++)
             {
-                Vector3 pos = transform.TransformPoint(entity.dots[i].vector3);
-                foreach (var item2 in entity.dots[i].triangles)
+                pos = entity.dots[indexes[i]].vector3 + tranPos;
+                int triKol = entity.dots[indexes[i]].triangles.Count;
+                for (int k = 0; k < triKol; k++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        ittcount++;
-                        Vector3 p = transform.TransformPoint(mesh.vertices[mesh.triangles[item2 + j]]);
+                        p = mesh.vertices[mesh.triangles[entity.dots[indexes[i]].triangles[k] + j]] + tranPos;
                         if (pl.GetSide(p) == side)
                             continue;
 
-                        Debug.DrawLine(p, pos, Color.blue, 0f, false);
+                        Debug.DrawLine(p, pos, Color.blue, 0, false);
 
                         if (Physics.Raycast(pos, (p - pos).normalized, out RaycastHit hit, Vector3.Distance(pos, p), 1 << 7))
                         {
-                            raycount++;
-                            Vector3 buf = new Vector3((float)Math.Round(hit.point.x, 5), (float)Math.Round(hit.point.y, 5), (float)Math.Round(hit.point.z, 5));
+                            buf = new Vector3((float)Math.Round(hit.point.x, 5), (float)Math.Round(hit.point.y, 5), (float)Math.Round(hit.point.z, 5));
                             if (!v.Contains(buf))
                                 v.Add(buf);
                         }
                     }
                 }
-
             }
-            Debug.Log(ittcount + "::" + preraycount + "::" + raycount);
 
-            Debug.Log("2 :: " + (dt[1] = DateTime.Now - dt2));
-            DateTime dt3 = DateTime.Now;
-
-            List<float> fl = new List<float>();
             Vector3 avgVect = Vector3.zero;
-            foreach (var item in v)
-                avgVect += item;
-            avgVect /= v.Count;
+            int vCount = v.Count;
+            float[] fl1 = new float[vCount];
+            for (int i = 0; i < vCount; i++)
+                avgVect += v[i];
+
+            avgVect /= vCount;
 
             for (int i = 0; i < v.Count; i++)
             {
-                fl.Add(Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
+                fl1[i] = (Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
             }
-            for (int i = 1; i < fl.Count; i++)
+
+            int partition(float[] array, int start, int end)
             {
-                if (fl[i] < fl[i - 1])
+                int marker = start;
+                for (int i = start; i <= end; i++)
                 {
-                    (fl[i], fl[i - 1]) = (fl[i - 1], fl[i]);
-                    (v[i], v[i - 1]) = (v[i - 1], v[i]);
-                    if (i > 1)
-                        i -= 2;
+                    if (array[i] <= array[end])
+                    {
+                        (array[i], array[marker]) = (array[marker], array[i]);
+                        (v[i], v[marker]) = (v[marker], v[i]);
+                        marker += 1;
+                    }
                 }
+                return marker - 1;
             }
+
+            void quicksort(float[] array, int start, int end)
+            {
+                if (start >= end)
+                {
+                    return;
+                }
+                int pivot = partition(array, start, end);
+                quicksort(array, start, pivot - 1);
+                quicksort(array, pivot + 1, end);
+            }
+
+            quicksort(fl1, 0, vCount - 1);
+
             bool btv(Vector3 first, Vector3 second, Vector3 third)
             {
                 if (Math.Round((Vector3.Distance(first, second) + Vector3.Distance(second, third)), 5) == Math.Round(Vector3.Distance(first, third), 5))
                     return true;
                 return false;
             }
-            Debug.Log("3 :: " + (dt[2] = DateTime.Now - dt3));
-            DateTime dt4 = DateTime.Now;
+
             if (!(v == null || v.Count < 3))
             {
-                for (int i = 0; i < v.Count; i++)
-                {
-                    if (i == 0)
-                    {
-                        if (btv(v[^1], v[0], v[1]))
-                        {
-                            fl.RemoveAt(0);
-                            v.RemoveAt(0);
-                            i--;
-                        }
-                    }
-                    else if (i == v.Count - 1)
-                    {
-                        if (btv(v[^2], v[^1], v[0]))
-                        {
-                            fl.RemoveAt(i);
-                            v.RemoveAt(i);
-                            i--;
-                        }
-                    }
-                    else if (btv(v[i - 1], v[i], v[i + 1]))
-                    {
-                        fl.RemoveAt(i);
-                        v.RemoveAt(i);
-                        i--;
-                    }
-                }
-
+                /* for (int i = 0; i < v.Count; i++)
+                 {
+                     if (i == 0)
+                     {
+                         if (btv(v[^1], v[0], v[1]))
+                         {                            
+                             v.RemoveAt(0);
+                             i--;
+                         }
+                     }
+                     else if (i == v.Count - 1)
+                     {
+                         if (btv(v[^2], v[^1], v[0]))
+                         {                          
+                             v.RemoveAt(i);
+                             i--;
+                         }
+                     }
+                     else if (btv(v[i - 1], v[i], v[i + 1]))
+                     {                      
+                         v.RemoveAt(i);
+                         i--;
+                     }
+                 }
+                */
                 for (int i = 0; i < v.Count - 1; i++)
                 {
                     Debug.DrawLine(v[i], v[i + 1], Color.green, 0, false);
@@ -304,13 +351,11 @@ public class MeshEditor : MonoBehaviour
 
 
             }
-            Debug.Log("4 :: " + (dt[3] = DateTime.Now - dt4));
 
         }
 
-        Debug.Log(dt[0] + dt[1] + dt[2] + dt[3]);
-        // Debug.Break();
     }
+
     /* private void OnTriggerEnter(Collider other)
      {
 

@@ -45,11 +45,7 @@ public class ObjectCreator
         {
 #if UNITY_EDITOR
             Object.DestroyImmediate(item);
-            Debug.Log("Editor");
             continue;
-#else 
-Destroy(item);        
-Debug.Log("Game");
 #endif
         }
         return gO;
