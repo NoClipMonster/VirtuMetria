@@ -183,7 +183,7 @@ public class MeshEditor : MonoBehaviour
      }*/
 
 
-    private async void OnTriggerStay(Collider other)
+    private void OnTriggerStay(Collider other)
     {
 
         Mesh mesh1 = GetComponent<MeshFilter>().mesh;
