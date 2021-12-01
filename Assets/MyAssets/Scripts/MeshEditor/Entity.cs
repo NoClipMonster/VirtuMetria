@@ -10,7 +10,7 @@ public class Entity
         dots = new List<Dot>();
         dotsOnPlane = new DotsOnPlane[2];
     }
-    public float BigestEdge = 0;
+    public float BigestEdge;
     public List<Dot> dots;
     public DotsOnPlane[] dotsOnPlane;
     public class Dot : Entity

@@ -63,13 +63,13 @@ public class MeshEditor : MonoBehaviour
                         delKol++;
                         if (triangles[k] == j && !entity.dots[^1].triangles.Contains(k))
                             entity.dots[^1].triangles.Add(k - (k % 3));
-                        /*for (int l = 0; l < 3; l++)
+                        for (int l = 0; l < 3; l++)
                         {
                             float dist = Math.Abs(Vector3.Distance(oMeshFilter.mesh.vertices[oMeshFilter.mesh.triangles[(k - (k % 3)) + l]], entity.dots[^1].vector3));
 
                             if (entity.BigestEdge < dist)
                                 entity.BigestEdge = dist;
-                        }*/
+                        }
 
                     }
                 }
@@ -183,178 +183,154 @@ public class MeshEditor : MonoBehaviour
      }*/
 
 
-    private void OnTriggerStay(Collider other)
+    private async void OnTriggerStay(Collider other)
     {
 
-        Mesh mesh = GetComponent<MeshFilter>().mesh;
+        Mesh mesh1 = GetComponent<MeshFilter>().mesh;
 
-        Plane pl = new Plane(other.gameObject.transform.forward, other.gameObject.transform.position);
+        Plane pl = new Plane(other.gameObject.transform.forward, Vector3.zero);
 
         List<Vector3> v = new List<Vector3>();
         List<int> side = new List<int>();
         List<int> otherSide = new List<int>();
-        Vector3 tranPos = transform.position;
         Vector3 pos;
+        Vector3 trPos = transform.position;
         int entityCount = entity.dots.Count;
-        Thread thread1 = new Thread(() => {
-            for (int i = 0; i < entityCount/3; i++)
-            {
-                pos = entity.dots[i].vector3 + tranPos;
-                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
-                if (pl.GetSide(pos))
-                    side.Add(i);
-                else
-                    otherSide.Add(i);
-            }
-        });
-        Thread thread2 = new Thread(() => {
-            for (int i = entityCount / 3; i < (entityCount /3)*2; i++)
-            {
-                pos = entity.dots[i].vector3 + tranPos;
-                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
-                if (pl.GetSide(pos))
-                    side.Add(i);
-                else
-                    otherSide.Add(i);
-            }
-        });
-        Thread thread3 = new Thread(() => {
-            for (int i = (entityCount / 3) * 2; i < entityCount; i++)
-            {
-                pos = entity.dots[i].vector3 + tranPos;
-                // if(pl.GetDistanceToPoint(pos)<entity.BigestEdge)
-                if (pl.GetSide(pos))
-                    side.Add(i);
-                else
-                    otherSide.Add(i);
-            }
-        });
-        thread1.Start();
-        thread2.Start();
-        thread3.Start();
-        do { }while (thread1.IsAlive || thread2.IsAlive ||thread3.IsAlive);
-
-        if (side.Count <= otherSide.Count)
-            DoStuf(side, true);
-        else DoStuf(otherSide, false);
-
-        void DoStuf(List<int> indexes, bool side)
+        
+        Thread thread1 = new Thread((object t) =>
         {
-            int inKol = indexes.Count;
-            Vector3 pos;
             Vector3 p;
             Vector3 buf;
-            for (int i = 0; i < inKol; i++)
+            object[] f = t as object[];
+            
+            Vector3[] vertices = f[0] as Vector3[];
+            int[] triangles = f[1] as int[];
+            Entity entity = f[2] as Entity;
+            for (int i = 0; i < entityCount; i++)
             {
-                pos = entity.dots[indexes[i]].vector3 + tranPos;
-                int triKol = entity.dots[indexes[i]].triangles.Count;
-                for (int k = 0; k < triKol; k++)
+                pos = entity.dots[i].vector3;
+                float dist = Math.Abs(pl.GetDistanceToPoint(pos));
+                if (dist < entity.BigestEdge)
                 {
-                    for (int j = 0; j < 3; j++)
+
+                    int triKol = entity.dots[i].triangles.Count;
+                    for (int k = 0; k < triKol; k++)
                     {
-                        p = mesh.vertices[mesh.triangles[entity.dots[indexes[i]].triangles[k] + j]] + tranPos;
-                        if (pl.GetSide(p) == side)
-                            continue;
-
-                        Debug.DrawLine(p, pos, Color.blue, 0, false);
-
-                        if (Physics.Raycast(pos, (p - pos).normalized, out RaycastHit hit, Vector3.Distance(pos, p), 1 << 7))
+                        for (int j = 0; j < 3; j++)
                         {
-                            buf = new Vector3((float)Math.Round(hit.point.x, 5), (float)Math.Round(hit.point.y, 5), (float)Math.Round(hit.point.z, 5));
-                            if (!v.Contains(buf))
+                            p = vertices[triangles[entity.dots[i].triangles[k] + j]];
+                            if (Math.Abs(pl.GetDistanceToPoint(p)) + Math.Abs(pl.GetDistanceToPoint(pos)) > Math.Abs(Vector3.Distance(p, pos)))
+                                continue;
+
+                            Debug.DrawLine(p + trPos, pos + trPos, Color.blue, 0, false);
+
+                          // if (Physics.Linecast(p + trPos, pos + trPos, out RaycastHit hit, 1 << 7))
+                          //  {
+                                buf = new Vector3((float)Math.Round((p.x + trPos.x) / 2, 2), (float)Math.Round((p.y + trPos.y) / 2, 2), (float)Math.Round((p.z + trPos.z) / 2, 2));
+                                // if (!v.Contains(buf))
                                 v.Add(buf);
+                            //}
                         }
                     }
                 }
             }
+        });
+        object[] g = new object[3];
+        g[0] = mesh1.vertices;
+        g[1] = mesh1.triangles;
+        g[2] = entity;
+         thread1.Start(g);
+          /*thread2.Start();
+          thread3.Start();*/
+        do { } while (thread1.IsAlive);
+        
 
-            Vector3 avgVect = Vector3.zero;
-            int vCount = v.Count;
-            float[] fl1 = new float[vCount];
-            for (int i = 0; i < vCount; i++)
-                avgVect += v[i];
+        Vector3 avgVect = Vector3.zero;
+        int vCount = v.Count;
+        float[] fl1 = new float[vCount];
+        for (int i = 0; i < vCount; i++)
+            avgVect += v[i];
 
-            avgVect /= vCount;
+        avgVect /= vCount;
 
-            for (int i = 0; i < v.Count; i++)
+        for (int i = 0; i < v.Count; i++)
+        {
+            fl1[i] = (Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
+        }
+
+        int partition(float[] array, int start, int end)
+        {
+            int marker = start;
+            for (int i = start; i <= end; i++)
             {
-                fl1[i] = (Vector3.SignedAngle(other.transform.up, v[i] - avgVect, other.transform.forward));
-            }
-
-            int partition(float[] array, int start, int end)
-            {
-                int marker = start;
-                for (int i = start; i <= end; i++)
+                if (array[i] <= array[end])
                 {
-                    if (array[i] <= array[end])
-                    {
-                        (array[i], array[marker]) = (array[marker], array[i]);
-                        (v[i], v[marker]) = (v[marker], v[i]);
-                        marker += 1;
-                    }
+                    (array[i], array[marker]) = (array[marker], array[i]);
+                    (v[i], v[marker]) = (v[marker], v[i]);
+                    marker += 1;
                 }
-                return marker - 1;
             }
+            return marker - 1;
+        }
 
-            void quicksort(float[] array, int start, int end)
+        void quicksort(float[] array, int start, int end)
+        {
+            if (start >= end)
             {
-                if (start >= end)
-                {
-                    return;
-                }
-                int pivot = partition(array, start, end);
-                quicksort(array, start, pivot - 1);
-                quicksort(array, pivot + 1, end);
+                return;
             }
+            int pivot = partition(array, start, end);
+            quicksort(array, start, pivot - 1);
+            quicksort(array, pivot + 1, end);
+        }
 
-            quicksort(fl1, 0, vCount - 1);
+        quicksort(fl1, 0, vCount - 1);
 
-            bool btv(Vector3 first, Vector3 second, Vector3 third)
-            {
-                if (Math.Round((Vector3.Distance(first, second) + Vector3.Distance(second, third)), 5) == Math.Round(Vector3.Distance(first, third), 5))
-                    return true;
-                return false;
-            }
+        bool btv(Vector3 first, Vector3 second, Vector3 third)
+        {
+            if (Math.Round((Vector3.Distance(first, second) + Vector3.Distance(second, third)), 2) == Math.Round(Vector3.Distance(first, third), 2))
+                return true;
+            return false;
+        }
 
-            if (!(v == null || v.Count < 3))
-            {
-                /* for (int i = 0; i < v.Count; i++)
+        if (!(v == null || v.Count < 3))
+        {
+             for (int i = 0; i < v.Count; i++)
+             {
+                 if (i == 0)
                  {
-                     if (i == 0)
-                     {
-                         if (btv(v[^1], v[0], v[1]))
-                         {                            
-                             v.RemoveAt(0);
-                             i--;
-                         }
+                     if (btv(v[^1], v[0], v[1])||v[0]==v[^1]||v[0]==v[1])
+                     {                            
+                         v.RemoveAt(0);
+                         i--;
                      }
-                     else if (i == v.Count - 1)
-                     {
-                         if (btv(v[^2], v[^1], v[0]))
-                         {                          
-                             v.RemoveAt(i);
-                             i--;
-                         }
-                     }
-                     else if (btv(v[i - 1], v[i], v[i + 1]))
-                     {                      
+                 }
+                 else if (i == v.Count - 1)
+                 {
+                     if (btv(v[^2], v[^1], v[0]) || v[^1] == v[^2] || v[^1] == v[0])
+                     {                          
                          v.RemoveAt(i);
                          i--;
                      }
                  }
-                */
-                for (int i = 0; i < v.Count - 1; i++)
-                {
-                    Debug.DrawLine(v[i], v[i + 1], Color.green, 0, false);
-                }
-                Debug.DrawLine(v[^1], v[0], Color.green, 0, false);
-
-
+                 else if (btv(v[i - 1], v[i], v[i + 1]) || v[i] == v[i - 1] || v[i] == v[i + 1])
+                 {                      
+                     v.RemoveAt(i);
+                     i--;
+                 }
+             }
+            for (int i = 0; i < v.Count - 1; i++)
+            {
+                Debug.DrawLine(v[i], v[i + 1], Color.green, 0, false);
             }
+            Debug.DrawLine(v[^1], v[0], Color.green, 0, false);
+
 
         }
 
     }
+
+
 
     /* private void OnTriggerEnter(Collider other)
      {
