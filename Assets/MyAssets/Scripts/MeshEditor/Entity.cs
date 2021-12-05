@@ -41,14 +41,11 @@ public class Entity
         public List<int> indexesOfDots;
         public List<Dot> Dots;
         public bool HasPlane = false;
-        public Collider hand;
-        public SteamVR_Input_Sources side;
-        public DotsOnPlane() { }
 
-        public DotsOnPlane(List<Dot> inDots, RaycastHit point, Transform transform, Collider controller)
+        public SteamVR_Input_Sources side;
+
+        public DotsOnPlane(List<Dot> inDots, RaycastHit point, Transform transform)
         {
-            hand = controller;
-            side = hand.GetComponent<SteamVR_Behaviour_Pose>().inputSource;
             if (HasPlane)
             {
                 Debug.LogError("Повторное задание плоскости");
